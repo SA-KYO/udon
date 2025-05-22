@@ -42,19 +42,31 @@
       <input type="text" name="modelNumber" class="form-control">
     </div>
     <div class="mb-3">
-      <label class="form-label">故障内容</label><br>
-      <input type="checkbox" name="issues" value="動作しない"> 動作しない<br>
-      <input type="checkbox" name="issues" value="異音がする"> 異音がする<br>
-      <input type="checkbox" name="issues" value="電源が入らない"> 電源が入らない<br>
-      <input type="checkbox" name="issues" value="その他"> その他<br>
+      <label class="form-label">故障内容（複数選択可）</label><br>
+      <div class="form-check">
+        <input type="checkbox" name="issues" value="動作しない" class="form-check-input" id="issue1">
+        <label class="form-check-label" for="issue1">動作しない</label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" name="issues" value="異音がする" class="form-check-input" id="issue2">
+        <label class="form-check-label" for="issue2">異音がする</label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" name="issues" value="電源が入らない" class="form-check-input" id="issue3">
+        <label class="form-check-label" for="issue3">電源が入らない</label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" name="issues" value="その他" class="form-check-input" id="issue4">
+        <label class="form-check-label" for="issue4">その他</label>
+      </div>
     </div>
     <div class="mb-3">
-      <label class="form-label">詳細な状況</label>
+      <label class="form-label">詳細な症状</label>
       <textarea name="details" class="form-control" rows="3"></textarea>
     </div>
     <div class="mb-3">
-      <label class="form-label">写真/動画</label>
-      <input type="file" name="file" accept="image/*,video/*" class="form-control">
+      <label class="form-label">写真 / 動画アップロード</label>
+      <input type="file" name="file" class="form-control" accept="image/*,video/*">
     </div>
     <input type="hidden" name="userId">
     <input type="hidden" name="lineName">
@@ -64,7 +76,7 @@
   <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwGE8mEfPkpplg8Qttbzk4FQk8xkQDZmYoTwGpR62GJZU6WIVWr13QIqiCRNrCWUWwv/exec';
 
-    $(async function() {
+    $(async function () {
       await liff.init({ liffId: '2007442822-Nal0O7lP' });
       const profile = await liff.getProfile();
       $('input[name="userId"]').val(profile.userId);
@@ -96,7 +108,7 @@
             method: 'POST',
             data: fd,
             processData: false,
-            contentType: false,
+            contentType: false
           })
           .done(() => {
             alert('送信が完了しました。ありがとうございました。');
