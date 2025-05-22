@@ -81,10 +81,17 @@
     <button type="submit" class="btn btn-primary">送信</button>
   </form>
 
+  <!-- ✅ ローディングインジケーター -->
+  <div id="loadingIndicator" class="text-center mt-4" style="display:none;">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">送信中...</span>
+    </div>
+    <p class="mt-2">送信しています、しばらくお待ちください。</p>
+  </div>
+
   <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwdFEdP5PqCaVbHr2VkSWUqBiO45Bj8-mzEB5SR74F8wcqIWDOy-DMpltmfieuB8Lgr/exec';
 
-    // 型番リスト定義
     const modelOptions = {
       "製麺機": [
         "M-305P", "M-808P", "さぬき一番", "さぬき一番AP", "さぬきM301P",
@@ -99,7 +106,6 @@
       ]
     };
 
-    // 型番セレクトを機器種別に応じて変更
     $('#equipmentType').on('change', function () {
       const selectedType = $(this).val();
       const $modelSelect = $('#modelNumber');
@@ -115,7 +121,6 @@
       }
     });
 
-    // LIFF連携＆フォーム送信
     $(async function () {
       await liff.init({ liffId: '2007442822-Nal0O7lP' });
       const profile = await liff.getProfile();
@@ -143,6 +148,9 @@
         }
 
         function sendForm(fd) {
+          $('#loadingIndicator').show();
+          $('button[type="submit"]').prop('disabled', true);
+
           $.ajax({
             url: scriptURL,
             method: 'POST',
@@ -158,6 +166,10 @@
           .fail((err) => {
             console.error("送信失敗:", err);
             alert('送信に失敗しました。');
+          })
+          .always(() => {
+            $('#loadingIndicator').hide();
+            $('button[type="submit"]').prop('disabled', false);
           });
         }
       });
