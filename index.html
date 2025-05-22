@@ -27,9 +27,10 @@
       <label class="form-label">担当者名</label>
       <input type="text" name="contactPerson" class="form-control" required>
     </div>
+
     <div class="mb-3">
       <label class="form-label">機器の種類</label>
-      <select name="equipmentType" class="form-select" required>
+      <select name="equipmentType" id="equipmentType" class="form-select" required>
         <option value="">-- 選択してください --</option>
         <option value="製麺機">製麺機</option>
         <option value="ニーダー">ニーダー</option>
@@ -37,10 +38,14 @@
         <option value="その他">その他</option>
       </select>
     </div>
+
     <div class="mb-3">
       <label class="form-label">型番</label>
-      <input type="text" name="modelNumber" class="form-control">
+      <select name="modelNumber" id="modelNumber" class="form-select">
+        <option value="">-- 機器の種類を先に選択してください --</option>
+      </select>
     </div>
+
     <div class="mb-3">
       <label class="form-label">故障内容（複数選択可）</label><br>
       <div class="form-check">
@@ -60,22 +65,57 @@
         <label class="form-check-label" for="issue4">その他</label>
       </div>
     </div>
+
     <div class="mb-3">
       <label class="form-label">詳細な症状</label>
       <textarea name="details" class="form-control" rows="3"></textarea>
     </div>
+
     <div class="mb-3">
       <label class="form-label">写真 / 動画アップロード</label>
       <input type="file" name="file" class="form-control" accept="image/*,video/*">
     </div>
+
     <input type="hidden" name="userId">
     <input type="hidden" name="lineName">
     <button type="submit" class="btn btn-primary">送信</button>
   </form>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwGE8mEfPkpplg8Qttbzk4FQk8xkQDZmYoTwGpR62GJZU6WIVWr13QIqiCRNrCWUWwv/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwdFEdP5PqCaVbHr2VkSWUqBiO45Bj8-mzEB5SR74F8wcqIWDOy-DMpltmfieuB8Lgr/exec';
 
+    // 型番リスト定義
+    const modelOptions = {
+      "製麺機": [
+        "M-305P", "M-808P", "さぬき一番", "さぬき一番AP", "さぬきM301P",
+        "更科AP", "こんぴらシステムNO.1", "トップヌードルTP-1型", "トップヌードルTP-2型",
+        "全自動手打式製麺設備", "トップヌードルTP-3型", "トップヌードルTP-4型"
+      ],
+      "ニーダー": [
+        "SN-6ST", "SN-6DX", "スーパーニーダー", "真空プレスニーダー", "マルチニーダー", "スーパーミックス"
+      ],
+      "プレス": [
+        "RP-1", "M-1P", "M-2P", "ローリングプレス"
+      ]
+    };
+
+    // 型番セレクトを機器種別に応じて変更
+    $('#equipmentType').on('change', function () {
+      const selectedType = $(this).val();
+      const $modelSelect = $('#modelNumber');
+      $modelSelect.empty();
+
+      if (modelOptions[selectedType]) {
+        $modelSelect.append(`<option value="">-- 型番を選択してください --</option>`);
+        modelOptions[selectedType].forEach(model => {
+          $modelSelect.append(`<option value="${model}">${model}</option>`);
+        });
+      } else {
+        $modelSelect.append(`<option value="">-- 該当なし --</option>`);
+      }
+    });
+
+    // LIFF連携＆フォーム送信
     $(async function () {
       await liff.init({ liffId: '2007442822-Nal0O7lP' });
       const profile = await liff.getProfile();
@@ -110,11 +150,13 @@
             processData: false,
             contentType: false
           })
-          .done(() => {
+          .done((res) => {
+            console.log("送信成功:", res);
             alert('送信が完了しました。ありがとうございました。');
             liff.closeWindow();
           })
-          .fail(() => {
+          .fail((err) => {
+            console.error("送信失敗:", err);
             alert('送信に失敗しました。');
           });
         }
