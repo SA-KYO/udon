@@ -13,18 +13,14 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(255, 255, 255, 0.8);
-      z-index: 9999;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.8);
       display: none;
-    }
-    #loadingOverlay .loading-content {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
     }
   </style>
 </head>
@@ -83,14 +79,12 @@
     <button type="submit" class="btn btn-primary">送信</button>
   </form>
 
-  <!-- ✅ 中央表示ローディングオーバーレイ -->
+  <!-- ✅ 中央表示ローディング画面 -->
   <div id="loadingOverlay">
-    <div class="loading-content">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">送信中...</span>
-      </div>
-      <p class="mt-2">送信しています、しばらくお待ちください。</p>
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">送信中...</span>
     </div>
+    <p class="mt-2">送信しています、しばらくお待ちください。</p>
   </div>
 
   <script>
@@ -154,12 +148,13 @@
             contentType: false
           })
           .done((res) => {
+            console.log("送信成功:", res);
             alert('送信が完了しました。ありがとうございました。');
             liff.closeWindow();
           })
           .fail((err) => {
+            console.error("送信失敗:", err);
             alert('送信に失敗しました。');
-            console.error(err);
           })
           .always(() => {
             $('#loadingOverlay').hide();
