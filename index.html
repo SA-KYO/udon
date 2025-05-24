@@ -8,21 +8,30 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
 
-  <style>
-    #loadingOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255,255,255,0.8);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      z-index: 9999;
-    }
-  </style>
+ <!-- ✅ CSS追加（中央揃え） -->
+<style>
+  #loadingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255,255,255,0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 9999;
+  }
+
+  /* ✅ 中央にスピナー＋テキストをまとめて配置 */
+  #loadingOverlay .loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+</style>
+
 </head>
 <body class="container py-4">
   <h2 class="mb-3">修理依頼フォーム</h2>
@@ -79,13 +88,15 @@
     <button type="submit" class="btn btn-primary">送信</button>
   </form>
 
-  <!-- ✅ 中央表示ローディング画面 -->
-  <div id="loadingOverlay">
+ <!-- ✅ 中央表示ローディング画面（修正後） -->
+<div id="loadingOverlay">
+  <div class="loading-content">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">送信中...</span>
     </div>
-    <p class="mt-2">送信しています、しばらくお待ちください。</p>
+    <p class="mt-2 text-center">送信しています、しばらくお待ちください。</p>
   </div>
+</div>
 
   <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbybNn754qdjw2JrLbyml11prfnOYA852H5rjoB_ph7xp992jMhp7jg0D6xazx4JTdmM/exec';
