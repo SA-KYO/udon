@@ -81,7 +81,6 @@
     <button type="submit" class="btn btn-primary">送信</button>
   </form>
 
-  <!-- ✅ ローディングインジケーター -->
   <div id="loadingIndicator" class="text-center mt-4" style="display:none;">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">送信中...</span>
@@ -93,17 +92,9 @@
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwGE8mEfPkpplg8Qttbzk4FQk8xkQDZmYoTwGpR62GJZU6WIVWr13QIqiCRNrCWUWwv/exec';
 
     const modelOptions = {
-      "製麺機": [
-        "M-305P", "M-808P", "さぬき一番", "さぬき一番AP", "さぬきM301P",
-        "更科AP", "こんぴらシステムNO.1", "トップヌードルTP-1型", "トップヌードルTP-2型",
-        "全自動手打式製麺設備", "トップヌードルTP-3型", "トップヌードルTP-4型"
-      ],
-      "ニーダー": [
-        "SN-6ST", "SN-6DX", "スーパーニーダー", "真空プレスニーダー", "マルチニーダー", "スーパーミックス"
-      ],
-      "プレス": [
-        "RP-1", "M-1P", "M-2P", "ローリングプレス"
-      ]
+      "製麺機": ["M-305P", "M-808P", "さぬき一番", "さぬき一番AP", "さぬきM301P", "更科AP", "こんぴらシステムNO.1", "トップヌードルTP-1型", "トップヌードルTP-2型", "全自動手打式製麺設備", "トップヌードルTP-3型", "トップヌードルTP-4型"],
+      "ニーダー": ["SN-6ST", "SN-6DX", "スーパーニーダー", "真空プレスニーダー", "マルチニーダー", "スーパーミックス"],
+      "プレス": ["RP-1", "M-1P", "M-2P", "ローリングプレス"]
     };
 
     $('#equipmentType').on('change', function () {
@@ -112,12 +103,12 @@
       $modelSelect.empty();
 
       if (modelOptions[selectedType]) {
-        $modelSelect.append(<option value="">-- 型番を選択してください --</option>);
+        $modelSelect.append(`<option value="">-- 型番を選択してください --</option>`);
         modelOptions[selectedType].forEach(model => {
-          $modelSelect.append(<option value="${model}">${model}</option>);
+          $modelSelect.append(`<option value="${model}">${model}</option>`);
         });
       } else {
-        $modelSelect.append(<option value="">-- 該当なし --</option>);
+        $modelSelect.append(`<option value="">-- 該当なし --</option>`);
       }
     });
 
