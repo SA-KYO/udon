@@ -61,12 +61,12 @@
         <label class="form-check-label" for="issue3">電源が入らない</label>
       </div>
       <div class="form-check">
-        <input type="checkbox" name="issues" value="麺が切れない" class="form-check-input" id="issue4">
-        <label class="form-check-label" for="issue4">麺が切れない</label>
+        <input type="checkbox" name="issues" value="その他" class="form-check-input" id="issue4">
+        <label class="form-check-label" for="issue4">その他</label>
       </div>
       <div class="form-check">
-        <input type="checkbox" name="issues" value="その他" class="form-check-input" id="issue5">
-        <label class="form-check-label" for="issue5">その他</label>
+        <input type="checkbox" name="issues" value="麺が切れない" class="form-check-input" id="issue5">
+        <label class="form-check-label" for="issue5">麺が切れない</label>
       </div>
     </div>
 
@@ -87,16 +87,91 @@
     <button type="submit" class="btn btn-primary">送信</button>
   </form>
 
-  <!-- ✅ 画面中央のローディングインジケーター -->
-  <div id="loadingIndicator" class="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center bg-white bg-opacity-75" style="display:none; z-index:1050;">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">送信中...</span>
+  <!-- ✅ ローディングインジケーター（画面中央に表示） -->
+  <div id="loadingIndicator" class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" style="display:none; z-index:1050;">
+    <div class="text-center">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">送信中...</span>
+      </div>
+      <p class="mt-2">送信しています、しばらくお待ちください。</p>
     </div>
-    <p class="mt-2">送信しています、しばらくお待ちください。</p>
   </div>
 
-  <!-- 以下JavaScript（変更なしのため省略） -->
-  <!-- 上記質問内のJavaScriptコードをここに挿入してください -->
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbybNn754qdjw2JrLbyml11prfnOYA852H5rjoB_ph7xp992jMhp7jg0D6xazx4JTdmM/exec';
 
+    const modelOptions = {
+      "製麺機": ["M-305P", "M-808P", "さぬき一番", "さぬき一番AP", "さぬきM301P", "更科AP", "こんぴらシステムNO.1", "トップヌードルTP-1型", "トップヌードルTP-2型", "全自動手打式製麺設備", "トップヌードルTP-3型", "トップヌードルTP-4型"],
+      "ニーダー": ["SN-6ST", "SN-6DX", "スーパーニーダー", "真空プレスニーダー", "マルチニーダー", "スーパーミックス"],
+      "プレス": ["RP-1", "M-1P", "M-2P", "ローリングプレス"]
+    };
+
+    $('#equipmentType').on('change', function () {
+      const selectedType = $(this).val();
+      const $modelSelect = $('#modelNumber');
+      $modelSelect.empty();
+
+      if (modelOptions[selectedType]) {
+        $modelSelect.append(`<option value="">-- 型番を選択してください --</option>`);
+        modelOptions[selectedType].forEach(model => {
+          $modelSelect.append(`<option value="${model}">${model}</option>`);
+        });
+      } else {
+        $modelSelect.append(`<option value="">-- 該当なし --</option>`);
+      }
+    });
+
+    $(async function () {
+      await liff.init({ liffId: '2007442822-Nal0O7lP' });
+      const profile = await liff.getProfile();
+      $('input[name="userId"]').val(profile.userId);
+      $('input[name="lineName"]').val(profile.displayName);
+
+      $('#repairForm').submit(function (e) {
+        e.preventDefault();
+        const form = document.getElementById('repairForm');
+        const formData = new FormData(form);
+
+        const fileInput = $('input[name="file"]')[0];
+        if (fileInput && fileInput.files.length > 0) {
+          const reader = new FileReader();
+          reader.onload = function () {
+            const base64Data = reader.result.split(',')[1];
+            formData.append('fileData', base64Data);
+            formData.append('fileName', fileInput.files[0].name);
+            formData.append('fileMimeType', fileInput.files[0].type);
+            sendForm(formData);
+          };
+          reader.readAsDataURL(fileInput.files[0]);
+        } else {
+          sendForm(formData);
+        }
+
+        function sendForm(fd) {
+          $('#loadingIndicator').show();
+          $('button[type="submit"]').prop('disabled', true);
+
+          $.ajax({
+            url: scriptURL,
+            method: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false
+          })
+          .done((res) => {
+            alert('送信が完了しました。ありがとうございました。');
+            liff.closeWindow();
+          })
+          .fail((err) => {
+            alert('送信に失敗しました。');
+          })
+          .always(() => {
+            $('#loadingIndicator').hide();
+            $('button[type="submit"]').prop('disabled', false);
+          });
+        }
+      });
+    });
+  </script>
 </body>
 </html>
