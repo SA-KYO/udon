@@ -113,55 +113,61 @@
     });
 
     $(async function () {
-      await liff.init({ liffId: '2007442822-Nal0O7lP' });
-      const profile = await liff.getProfile();
-      $('input[name="userId"]').val(profile.userId);
-      $('input[name="lineName"]').val(profile.displayName);
+      try {
+        await liff.init({ liffId: '2007442822-Nal0O7lP' });
+        const profile = await liff.getProfile();
+        $('input[name="userId"]').val(profile.userId);
+        $('input[name="lineName"]').val(profile.displayName);
 
-      $('#repairForm').off('submit').on('submit', function (e) {
-        e.preventDefault();
-        $('#loadingIndicator').show();
-        $('button[type="submit"]').prop('disabled', true);
+        $('#repairForm').off('submit').on('submit', function (e) {
+          e.preventDefault();
+          $('#loadingIndicator').show();
+          $('button[type="submit"]').prop('disabled', true);
 
-        const form = document.getElementById('repairForm');
-        const formData = new FormData(form);
+          const form = document.getElementById('repairForm');
+          const formData = new FormData(form);
 
-        const fileInput = $('input[name="file"]')[0];
-        if (fileInput && fileInput.files.length > 0) {
-          const reader = new FileReader();
-          reader.onload = function () {
-            const base64Data = reader.result.split(',')[1];
-            formData.append('fileData', base64Data);
-            formData.append('fileName', fileInput.files[0].name);
-            formData.append('fileMimeType', fileInput.files[0].type);
+          const fileInput = $('input[name="file"]')[0];
+          if (fileInput && fileInput.files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = function () {
+              const base64Data = reader.result.split(',')[1];
+              formData.append('fileData', base64Data);
+              formData.append('fileName', fileInput.files[0].name);
+              formData.append('fileMimeType', fileInput.files[0].type);
+              sendForm(formData);
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+          } else {
             sendForm(formData);
-          };
-          reader.readAsDataURL(fileInput.files[0]);
-        } else {
-          sendForm(formData);
-        }
+          }
 
-        function sendForm(fd) {
-          $.ajax({
-            url: scriptURL,
-            method: 'POST',
-            data: fd,
-            processData: false,
-            contentType: false
-          })
-          .done((res) => {
-            alert('送信が完了しました。ありがとうございました。');
-            liff.closeWindow();
-          })
-          .fail((err) => {
-            alert('送信に失敗しました。');
-          })
-          .always(() => {
-            $('#loadingIndicator').hide();
-            $('button[type="submit"]').prop('disabled', false);
-          });
-        }
-      });
+          function sendForm(fd) {
+            $.ajax({
+              url: scriptURL,
+              method: 'POST',
+              data: fd,
+              processData: false,
+              contentType: false
+            })
+            .done((res) => {
+              alert('送信が完了しました。ありがとうございました。');
+              liff.closeWindow();
+            })
+            .fail((err) => {
+              alert('送信に失敗しました。');
+            })
+            .always(() => {
+              $('#loadingIndicator').hide();
+              $('button[type="submit"]').prop('disabled', false);
+            });
+          }
+        });
+      } catch (error) {
+        console.error('LIFF初期化またはプロフィール取得エラー:', error);
+        $('#loadingIndicator').hide();
+        alert('LINE連携に失敗しました。ページを再読み込みしてください。');
+      }
     });
   </script>
 </body>
