@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GAS CORS テスト</title>
 </head>
 <body>
@@ -12,8 +12,9 @@
   </pre>
 
   <script>
-    // ↓↓ ここを、先ほどコピーした “exec URL” に必ず書き換えてください ↓↓
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwLFKSGEMtznJclv-JGAqYFo-reSTWx9TZs0LjGV-Rg_1yRvFygQKbf7vcIDEgWsbCz/exec';
+    // ★ここを、先ほどコピーした exec URL に必ず書き換える★
+    // 例: 'https://script.google.com/macros/s/AKfycbwVJr0uwC4k8svXG3pna7lNPwD/exec'
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxtEVXyWMRECIWxY2pzjPKE0nwgPL2GEp_nyfo3JLHtgxro_KUUHFziEKv6spT3abbl/exec';
 
     document.getElementById('btnTest').addEventListener('click', async () => {
       const resultArea = document.getElementById('resultArea');
@@ -26,15 +27,13 @@
         });
         console.log('ステータス:', response.status, response.statusText);
 
-        // レスポンスを JSON パースしてみる
+        // JSON としてパース
         const data = await response.json();
         console.log('返却された JSON:', data);
 
-        // 画面に表示
         resultArea.textContent = 
           `Status: ${response.status} ${response.statusText}\n` +
           `JSON: ${JSON.stringify(data)}`;
-
       } catch (err) {
         console.error('fetch エラー:', err);
         resultArea.textContent = 'fetch エラー: ' + err.message;
