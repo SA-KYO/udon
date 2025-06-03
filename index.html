@@ -573,15 +573,16 @@
             detailedDescription: detailedDescription,
             files: filesData
           };
-          const scriptURL = 'https://script.google.com/macros/s/AKfycbykJs8Z1bNdItXwKLiAV_3SnZBazb0fdlpSAEVT1MU0OYOrbCBb469itsJ2dDlrhCN7/exec';  // GAS Web App endpoint URL
+          const scriptURL = 'https://script.google.com/macros/s/AKfycbz6S-sokWofM34CIHuWzVkW_3GyQofF1NAdCFOj2FyCvWrFq16hstglLonEIK5Iy1K1/exec';  // GAS Web App endpoint URL
           const response = await fetch(scriptURL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors', // ✅ 明示的にCORSモード指定
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(payload)
           });
-          if (!response.ok) throw new Error('ネットワークまたはサーバーエラーにより送信できませんでした');
+          
           const result = await response.json();
-          if (result.status !== 'success') {
+          if (!response.ok || result.status !== 'success') {
             throw new Error(result.message || '送信中にエラーが発生しました');
           }
           // Success: reset and show completion
@@ -642,11 +643,11 @@
             files: filesData,
             isAdditional: true
           };
-          const scriptURL = 'https://script.google.com/macros/s/AKfycbykJs8Z1bNdItXwKLiAV_3SnZBazb0fdlpSAEVT1MU0OYOrbCBb469itsJ2dDlrhCN7/exec';  // same GAS endpoint
+          const scriptURL = 'https://script.google.com/macros/s/AKfycbz6S-sokWofM34CIHuWzVkW_3GyQofF1NAdCFOj2FyCvWrFq16hstglLonEIK5Iy1K1/exec';  // same GAS endpoint
           const response = await fetch(scriptURL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(payload)
           });
           if (!response.ok) throw new Error('ネットワークまたはサーバーエラーにより送信できませんでした');
           const result = await response.json();
