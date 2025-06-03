@@ -4,128 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>修理依頼フォーム</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
-
- <!-- ✅ CSS追加（中央揃え） -->
-<style>
-  #loadingOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(255,255,255,0.8);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    z-index: 9999;
-  }
-
-  /* ✅ 中央にスピナー＋テキストをまとめて配置 */
-  #loadingOverlay .loading-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-</style>
-
 </head>
 <body class="container py-4">
-  <h2 class="mb-3 text-center">修理依頼フォーム</h2>
-  <form id="repairForm">
-    <div class="mb-3">
-      <label class="form-label">店舗名</label>
-      <input type="text" name="storeName" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">電話番号</label>
-      <input type="tel" name="phone" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">住所</label>
-      <input type="text" name="address" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">担当者名</label>
-      <input type="text" name="contactPerson" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">機器の種類</label>
-      <select name="equipmentType" id="equipmentType" class="form-select" required>
-        <option value="">-- 選択してください --</option>
-        <option value="製麺機">製麺機</option>
-        <option value="ニーダー">ニーダー</option>
-        <option value="プレス">プレス</option>
-        <option value="その他">その他</option>
-      </select>
 
-    
-    </div>
-    <div class="mb-3">
-      <label class="form-label">型番<p>(該当なしの場合は詳細な症状のところに機器、型番を入力ください)</p></label>
-      <select name="modelNumber" id="modelNumber" class="form-select">
-        <option value="">-- 機器の種類を先に選択してください --</option>
-      </select>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">故障内容（複数選択可）</label><br>
-      <div class="form-check"><input type="checkbox" name="issues" value="動作しない" class="form-check-input" id="issue1"><label class="form-check-label" for="issue1">動作しない</label></div>
-      <div class="form-check"><input type="checkbox" name="issues" value="異音がする" class="form-check-input" id="issue2"><label class="form-check-label" for="issue2">異音がする</label></div>
-      <div class="form-check"><input type="checkbox" name="issues" value="麺が切れない" class="form-check-input" id="issue1"><label class="form-check-label" for="issue1">麺が切れない</label></div>
-      <div class="form-check"><input type="checkbox" name="issues" value="電源が入らない" class="form-check-input" id="issue3"><label class="form-check-label" for="issue3">電源が入らない</label></div>
-      <div class="form-check"><input type="checkbox" name="issues" value="その他" class="form-check-input" id="issue4"><label class="form-check-label" for="issue4">その他</label></div>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">詳細な症状</label>
-      <textarea name="details" class="form-control" rows="3"></textarea>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">写真 / 動画アップロード</label>
-        <br>※製麺機の場合：全体写真</br>
-        <br>（両サイドのスペース確認のため、遠くから撮影）</br>
-        <br>※異音・動作不良：動画（10秒まで推奨)</br>
-      <input type="file" name="file" class="form-control" accept="image/*,video/*">
-    </div>
-    <input type="hidden" name="userId">
-    <input type="hidden" name="lineName">
-    <button type="submit" class="btn btn-primary">送信</button>
-  </form>
-
- <!-- ✅ 中央表示ローディング画面（修正後） -->
-<div id="loadingOverlay">
-  <div class="loading-content">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">送信中...</span>
-    </div>
-    <p class="mt-2 text-center">送信しています、しばらくお待ちください。</p>
+  <div id="formSection">
+    <h2 class="mb-3">修理依頼フォーム</h2>
+    <!-- フォーム (既存) -->
+    <form id="repairForm">
+      <!-- 店舗名、電話番号、住所、担当者名、機器の種類、型番、故障内容、詳細、ファイルアップロード -->
+      <!--（略：既存のフォームコードをそのまま使用）-->
+      <input type="hidden" name="userId">
+      <input type="hidden" name="lineName">
+      <button type="submit" class="btn btn-primary">送信</button>
+    </form>
   </div>
-</div>
+
+  <div id="thankYouSection" style="display:none;" class="text-center">
+    <h3 class="my-4">✅送信完了しました</h3>
+    <button id="addMediaBtn" class="btn btn-success">この依頼に写真・動画を追加で送る</button>
+    <button id="closeLiffBtn" class="btn btn-secondary">LINEトーク画面に戻る</button>
+  </div>
+
+  <div id="additionalMediaSection" style="display:none;">
+    <h4 class="mt-4">写真・動画追加送信</h4>
+    <input type="file" id="additionalFile" class="form-control my-3" accept="image/*,video/*">
+    <button id="sendAdditionalMedia" class="btn btn-primary">追加送信</button>
+  </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycby_MOT4PYbkUigu5bdiktZ-Yp7dEOEKeHc3gJyzXo3UdAyWM3G95EIssFDU8-LW8GNc/exec';
-
-    const modelOptions = {
-      "製麺機": ["M-305P", "M-808P", "さぬき一番", "さぬき一番AP", "さぬきM301P", "更科AP", "こんぴらシステムNO.1", "トップヌードルTP-1型", "トップヌードルTP-2型", "全自動手打式製麺設備", "トップヌードルTP-3型", "トップヌードルTP-4型"],
-      "ニーダー": ["SN-6ST", "SN-6DX", "スーパーニーダー", "真空プレスニーダー", "マルチニーダー", "スーパーミックス"],
-      "プレス": ["RP-1", "M-1P", "M-2P", "ローリングプレス"]
-    };
-
-    $('#equipmentType').on('change', function () {
-      const selectedType = $(this).val();
-      const $modelSelect = $('#modelNumber');
-      $modelSelect.empty();
-      if (modelOptions[selectedType]) {
-        $modelSelect.append(`<option value="">-- 型番を選択してください --</option>`);
-        modelOptions[selectedType].forEach(model => {
-          $modelSelect.append(`<option value="${model}">${model}</option>`);
-        });
-      } else {
-        $modelSelect.append(`<option value="">-- 該当なし --</option>`);
-      }
-    });
+    const scriptURL = '【あなたのGASウェブアプリURL】';
+    let savedData = {}; // 送信データ保持用
 
     $(async function () {
       await liff.init({ liffId: '2007442822-Nal0O7lP' });
@@ -137,47 +48,60 @@
         e.preventDefault();
         const form = document.getElementById('repairForm');
         const formData = new FormData(form);
-        const fileInput = $('input[name="file"]')[0];
+        savedData = Object.fromEntries(formData.entries());
 
-        if (fileInput && fileInput.files.length > 0) {
-          const reader = new FileReader();
-          reader.onload = function () {
-            const base64Data = reader.result.split(',')[1];
-            formData.append('fileData', base64Data);
-            formData.append('fileName', fileInput.files[0].name);
-            formData.append('fileMimeType', fileInput.files[0].type);
-            sendForm(formData);
-          };
-          reader.readAsDataURL(fileInput.files[0]);
-        } else {
-          sendForm(formData);
+        $.ajax({
+          url: scriptURL,
+          method: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false
+        }).done(() => {
+          $('#formSection').hide();
+          $('#thankYouSection').show();
+        }).fail(() => {
+          alert('送信に失敗しました');
+        });
+      });
+
+      $('#addMediaBtn').click(() => {
+        $('#thankYouSection').hide();
+        $('#additionalMediaSection').show();
+      });
+
+      $('#closeLiffBtn').click(() => liff.closeWindow());
+
+      $('#sendAdditionalMedia').click(() => {
+        const fileInput = $('#additionalFile')[0];
+        if (!fileInput.files[0]) {
+          alert('ファイルを選択してください');
+          return;
         }
 
-        function sendForm(fd) {
-          $('#loadingOverlay').show();
-          $('button[type="submit"]').prop('disabled', true);
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64Data = reader.result.split(',')[1];
+          const formData = new FormData();
+          Object.entries(savedData).forEach(([k, v]) => formData.append(k, v));
+          formData.append('fileData', base64Data);
+          formData.append('fileName', fileInput.files[0].name);
+          formData.append('fileMimeType', fileInput.files[0].type);
+          formData.append('additionalUpload', 'true');
 
           $.ajax({
             url: scriptURL,
             method: 'POST',
-            data: fd,
+            data: formData,
             processData: false,
             contentType: false
-          })
-          .done((res) => {
-            console.log("送信成功:", res);
-            alert('送信が完了しました。ありがとうございました。');
+          }).done(() => {
+            alert('追加写真・動画の送信が完了しました');
             liff.closeWindow();
-          })
-          .fail((err) => {
-            console.error("送信失敗:", err);
-            alert('送信に失敗しました。');
-          })
-          .always(() => {
-            $('#loadingOverlay').hide();
-            $('button[type="submit"]').prop('disabled', false);
+          }).fail(() => {
+            alert('追加送信に失敗しました');
           });
-        }
+        };
+        reader.readAsDataURL(fileInput.files[0]);
       });
     });
   </script>
