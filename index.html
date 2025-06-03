@@ -1,109 +1,680 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>修理依頼フォーム</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    /* Add a red asterisk after required field labels */
+    .required-mark::after { content: " *"; color: #EF4444; }
+  </style>
 </head>
-<body class="container py-4">
+<body class="bg-gray-100">
+  <div class="container mx-auto max-w-2xl p-4 sm:p-6 lg:p-8">
+    <header class="mb-6 text-center">
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">修理依頼フォーム</h1>
+    </header>
 
-  <div id="formSection">
-    <h2 class="mb-3">修理依頼フォーム</h2>
-    <!-- フォーム (既存) -->
-    <form id="repairForm">
-      <!-- 店舗名、電話番号、住所、担当者名、機器の種類、型番、故障内容、詳細、ファイルアップロード -->
-      <!--（略：既存のフォームコードをそのまま使用）-->
-      <input type="hidden" name="userId">
-      <input type="hidden" name="lineName">
-      <button type="submit" class="btn btn-primary">送信</button>
+    <!-- Main Form -->
+    <form id="repairForm" class="space-y-6">
+      <!-- Customer Information Section -->
+      <div class="form-section">
+        <h2 class="form-section-title text-xl font-bold text-gray-800 mb-3">お客様情報</h2>
+        <div>
+          <label for="storeName" class="block text-sm required-mark">店舗名</label>
+          <input type="text" id="storeName" name="storeName" required 
+                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                        focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+        </div>
+        <div class="mt-4">
+          <label for="contactName" class="block text-sm required-mark">ご担当者名</label>
+          <input type="text" id="contactName" name="contactName" required 
+                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                        focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+        </div>
+        <div class="mt-4">
+          <label for="phoneNumber" class="block text-sm required-mark">
+            お電話番号 <span class="text-xs text-gray-500">(ハイフンなし)</span>
+          </label>
+          <input type="tel" id="phoneNumber" name="phoneNumber" required 
+                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                        focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+        </div>
+        <div class="mt-4">
+          <label for="address" class="block text-sm">ご住所</label>
+          <input type="text" id="address" name="address" 
+                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                        focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+        </div>
+      </div>
+
+      <!-- Machine Information Section -->
+      <div class="form-section">
+        <h2 class="form-section-title text-xl font-bold text-gray-800 mb-3">機器情報</h2>
+        <div>
+          <label for="machineType" class="block text-sm required-mark">機器の種類</label>
+          <select id="machineType" name="machineType" required 
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm 
+                         focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <option value="">選択してください</option>
+            <option value="seimenki">製麺機</option>
+            <option value="presski">プレス機</option>
+            <option value="noodlekneader">ニーダー(ミキサー)</option>
+            <option value="other_machine">その他</option>
+          </select>
+        </div>
+        <div class="mt-4">
+          <label for="modelNumber" class="block text-sm">型番</label>
+          <select id="modelNumber" name="modelNumber" 
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm 
+                         focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <option value="">機器の種類を選択してください</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Trouble Symptoms Section -->
+      <div class="form-section">
+        <h2 class="form-section-title text-xl font-bold text-gray-800 mb-3">故障内容</h2>
+        <div id="troubleSymptoms" class="space-y-2">
+          <p class="text-sm text-gray-500">機器の種類を選択すると、故障内容の選択肢が表示されます。</p>
+          <p class="text-sm text-gray-500">当てはまるものをすべて選択してください。（複数選択可）</p>
+        </div>
+      </div>
+
+      <!-- Detailed Description Section -->
+      <div class="form-section">
+        <h2 class="form-section-title text-xl font-bold text-gray-800 mb-3">詳細な症状</h2>
+        <div>
+          <label for="detailedDescription" class="block text-sm">
+            「その他」を選択した場合や、上記以外に伝えたいことがあればご記入ください。
+          </label>
+          <textarea id="detailedDescription" name="detailedDescription" rows="4" 
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                           focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+        </div>
+      </div>
+
+      <!-- File Upload Section -->
+      <div class="form-section">
+        <h2 class="form-section-title text-xl font-bold text-gray-800 mb-3">写真・動画で状況を詳しく報告</h2>
+        <p class="text-sm text-gray-600 mb-4">写真や動画をお送りいただくと、よりスムーズで的確な対応が可能になります。</p>
+        <div class="file-upload-area">
+          <label for="fileUpload" class="inline-block px-4 py-2 bg-indigo-100 text-indigo-700 font-medium rounded-md 
+                                         cursor-pointer hover:bg-indigo-200 transition-colors">
+            カメラで撮影 / ファイルを選択
+            <input type="file" id="fileUpload" name="fileUpload" accept="image/*,video/*" class="sr-only" multiple />
+          </label>
+        </div>
+        <div id="filePreview" class="mt-4 space-y-2"></div>
+        <p class="text-sm text-gray-500 mt-4">・異音や動作不良の場合は、動画での送信を推奨します。</p>
+        <p class="text-sm text-gray-500">・動画を送信される場合は、30秒以内でお願いいたします。</p>
+        <p class="text-sm text-gray-500">・画像は5枚、動画は2本まで添付できます。</p>
+      </div>
+
+      <!-- Hidden fields for LINE user info -->
+      <input type="hidden" id="userId" name="userId" />
+      <input type="hidden" id="displayName" name="displayName" />
+
+      <div class="pt-2">
+        <button type="submit" 
+                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm 
+                       text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 
+                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          送信する
+        </button>
+      </div>
+    </form>
+
+    <!-- Completion Screen -->
+    <div id="completionScreen" class="hidden text-center">
+      <p class="text-lg font-medium mb-4">送信が完了しました。</p>
+      <p class="mb-6">ご協力ありがとうございました。</p>
+      <button id="addMoreBtn" 
+              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm 
+                     text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 
+                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        今回の依頼に追加で画像・動画を送る
+      </button>
+      <button id="closeLiffBtn" 
+              class="w-full mt-4 flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm 
+                     text-lg font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 
+                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        LINEに戻る
+      </button>
+    </div>
+
+    <!-- Additional File Upload Form -->
+    <form id="additionalForm" class="space-y-6 hidden">
+      <h2 class="text-lg font-bold text-gray-800">追加の写真・動画アップロード</h2>
+      <p class="text-gray-700">追加で送信する写真・動画を選択してください。</p>
+      <div class="file-upload-area">
+        <label for="additionalFile" class="inline-block px-4 py-2 bg-indigo-100 text-indigo-700 font-medium rounded-md 
+                                           cursor-pointer hover:bg-indigo-200 transition-colors">
+          カメラで撮影 / ファイルを選択
+          <input type="file" id="additionalFile" name="additionalFile" accept="image/*,video/*" class="sr-only" multiple />
+        </label>
+      </div>
+      <div id="additionalFilePreview" class="mt-4 space-y-2"></div>
+      <p class="text-sm text-gray-500">※画像は1回につき5枚、動画は2本まで選択できます。</p>
+
+      <!-- Hidden user info for additional uploads -->
+      <input type="hidden" id="userIdAdditional" name="userId" />
+      <input type="hidden" id="displayNameAdditional" name="displayName" />
+
+      <div class="pt-2">
+        <button type="submit" 
+                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm 
+                       text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 
+                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          送信する
+        </button>
+        <button type="button" id="closeLiffBtn2" 
+                class="w-full mt-4 flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm 
+                       text-lg font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 
+                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          LINEに戻る
+        </button>
+      </div>
     </form>
   </div>
 
-  <div id="thankYouSection" style="display:none;" class="text-center">
-    <h3 class="my-4">✅送信完了しました</h3>
-    <button id="addMediaBtn" class="btn btn-success">この依頼に写真・動画を追加で送る</button>
-    <button id="closeLiffBtn" class="btn btn-secondary">LINEトーク画面に戻る</button>
-  </div>
-
-  <div id="additionalMediaSection" style="display:none;">
-    <h4 class="mt-4">写真・動画追加送信</h4>
-    <input type="file" id="additionalFile" class="form-control my-3" accept="image/*,video/*">
-    <button id="sendAdditionalMedia" class="btn btn-primary">追加送信</button>
+  <!-- Full-screen Loading Overlay -->
+  <div id="loadingOverlay" 
+       class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50 hidden">
+    <div class="loader border-4 border-white border-t-transparent border-b-transparent rounded-full w-12 h-12 animate-spin mr-3"></div>
+    <span class="text-white text-lg">送信中...</span>
   </div>
 
   <script>
-    const scriptURL = '【あなたのGASウェブアプリURL】';
-    let savedData = {}; // 送信データ保持用
+    // Initialize LIFF SDK and get user profile
+    liff.init({ liffId: '2007442822-Nal0O7lP' })
+      .then(() => {
+        if (!liff.isLoggedIn()) {
+          liff.login();
+        } else {
+          return liff.getProfile();
+        }
+      })
+      .then(profile => {
+        if (profile) {
+          document.getElementById('userId').value = profile.userId;
+          document.getElementById('displayName').value = profile.displayName || '';
+          document.getElementById('userIdAdditional').value = profile.userId;
+          document.getElementById('displayNameAdditional').value = profile.displayName || '';
+        }
+      })
+      .catch(err => console.error('LIFF init error:', err));
 
-    $(async function () {
-      await liff.init({ liffId: '2007442822-Nal0O7lP' });
-      const profile = await liff.getProfile();
-      $('input[name="userId"]').val(profile.userId);
-      $('input[name="lineName"]').val(profile.displayName);
+    // Data for model numbers based on machine type
+    const modelData = {
+      seimenki: [
+        { value: 'm305p', text: 'M305-P' },
+        { value: 'm808p', text: 'M808-P' },
+        { value: 'sanuki_ichiban', text: 'さぬき一番' },
+        { value: 'sanuki_m301p', text: 'さぬきM301P' },
+        { value: 'sarashina', text: '更科' },
+        { value: 'top_noodle_tp1', text: 'トップヌードルTP-1型' },
+        { value: 'top_noodle_tp2', text: 'トップヌードルTP-2型' },
+        { value: 'other_seimenki_model', text: 'その他製麺機型番' }
+      ],
+      presski: [
+        { value: 'm1p', text: 'M-1P' },
+        { value: 'm2p', text: 'M-2P' },
+        { value: 'rp1p', text: 'RP-1P' },
+        { value: 'rp3p', text: 'RP-3P（ローリングプレス）' },
+        { value: 'rp200p', text: 'RP-200P（ローリングプレス）' },
+        { value: 'rp300p', text: 'RP-300P（ローリングプレス）' },
+        { value: 'other_press_model', text: 'その他プレス機型番' }
+      ],
+      noodlekneader: [
+        { value: 'sn6st', text: 'SN-6ST' },
+        { value: 'sn6dx', text: 'SN-6DX' },
+        { value: 'sn6p', text: 'SN-6P' },
+        { value: 'sn12p', text: 'SN-12P' },
+        { value: 'sn25p', text: 'SN-25P' },
+        { value: 'other_kneader_model', text: 'その他ニーダー型番' }
+      ],
+      other_machine: []
+    };
 
-      $('#repairForm').submit(function (e) {
-        e.preventDefault();
-        const form = document.getElementById('repairForm');
-        const formData = new FormData(form);
-        savedData = Object.fromEntries(formData.entries());
+    // Data for trouble symptom checkboxes by machine type
+    const troubleData = {
+      seimenki: [
+        { category: '電源・起動の問題', symptoms: [
+            { id: 'seimenki_power_off', text: '電源が入らない（ランプも点灯しない）' },
+            { id: 'seimenki_power_on_not_working', text: '電源ランプは点灯するが、動作しない' }
+        ]},
+        { category: '麺に関する問題', symptoms: [
+            { id: 'seimenki_noodle_cut_fail', text: '麺が切れない、または切れ方がおかしい' },
+            { id: 'seimenki_noodle_jam', text: '麺が詰まる、または途中で引っかかる' }
+        ]},
+        { category: '動作の異常', symptoms: [
+            { id: 'seimenki_roll_not_rotating', text: 'ロール（ローラー）が回転しない' },
+            { id: 'seimenki_noodle_not_feeding', text: '麺がうまく入っていかない' },
+            { id: 'seimenki_belt_issue', text: 'ベルトコンベアが動かない、または片寄る' }
+        ]},
+        { category: '音に関する問題', symptoms: [
+            { id: 'seimenki_noise', text: '異音がする（※動画での報告を推奨します）' }
+        ]},
+        { category: 'その他', symptoms: [
+            { id: 'seimenki_other_symptom', text: '上記以外の症状がある' }
+        ]}
+      ],
+      presski: [
+        { category: '電源・起動の問題', symptoms: [
+            { id: 'presski_power_off', text: '電源が入らない（ランプも点灯しない）' },
+            { id: 'presski_power_on_not_working', text: '電源ランプは点灯するが、動作しない' }
+        ]},
+        { category: '動作の異常', symptoms: [
+            { id: 'presski_roll_stop', text: 'ロール（ローラー）が回転しない、または途中で止まる' }
+        ]},
+        { category: '音に関する問題', symptoms: [
+            { id: 'presski_noise', text: '異音がする（※動画での報告を推奨します）' }
+        ]},
+        { category: 'その他', symptoms: [
+            { id: 'presski_other_symptom', text: '上記以外の症状がある' }
+        ]}
+      ],
+      noodlekneader: [
+        { category: '電源・起動の問題', symptoms: [
+            { id: 'noodlekneader_power_off', text: '電源が入らない（ランプも点灯しない）' },
+            { id: 'noodlekneader_power_on_not_working', text: '電源ランプは点灯するが、動作しない' }
+        ]},
+        { category: '動作の異常', symptoms: [
+            { id: 'noodlekneader_blade_stop', text: '練り羽根が回転しない、または途中で止まる' },
+            { id: 'noodlekneader_blade_heavy', text: '練り羽根の動きが重い、または遅い' }
+        ]},
+        { category: '音に関する問題', symptoms: [
+            { id: 'noodlekneader_noise_rattle', text: '異音がする（ガタガタ、ゴトゴトなど）' },
+            { id: 'noodlekneader_motor_noise', text: 'モーター音が普段より大きい、またはおかしい' }
+        ]},
+        { category: 'その他', symptoms: [
+            { id: 'noodlekneader_other_symptom', text: '上記以外の症状がある' }
+        ]}
+      ],
+      other_machine: [
+        { category: '症状について', symptoms: [
+            { id: 'other_machine_symptom_manual', text: '具体的な症状を下の「詳細な症状」欄にご記入ください。' }
+        ]}
+      ]
+    };
 
-        $.ajax({
-          url: scriptURL,
-          method: 'POST',
-          data: formData,
-          processData: false,
-          contentType: false
-        }).done(() => {
-          $('#formSection').hide();
-          $('#thankYouSection').show();
-        }).fail(() => {
-          alert('送信に失敗しました');
+    // Elements for dynamic fields and file previews
+    const machineTypeSelect = document.getElementById('machineType');
+    const modelNumberSelect = document.getElementById('modelNumber');
+    const troubleSymptomsDiv = document.getElementById('troubleSymptoms');
+    const fileUploadInput = document.getElementById('fileUpload');
+    const filePreviewDiv = document.getElementById('filePreview');
+    const additionalFileInput = document.getElementById('additionalFile');
+    const additionalFilePreviewDiv = document.getElementById('additionalFilePreview');
+
+    // File lists for main and additional
+    let selectedFiles = [];
+    let selectedAdditionalFiles = [];
+
+    // Update model options and trouble checkboxes when machine type changes
+    if (machineTypeSelect) {
+      machineTypeSelect.addEventListener('change', function() {
+        const selectedMachine = this.value;
+        // Reset and populate model options
+        modelNumberSelect.innerHTML = '<option value="">選択してください</option>';
+        if (selectedMachine && modelData[selectedMachine]) {
+          modelData[selectedMachine].forEach(model => {
+            const option = document.createElement('option');
+            option.value = model.value;
+            option.textContent = model.text;
+            modelNumberSelect.appendChild(option);
+          });
+        } else if (selectedMachine === "other_machine") {
+          const option = document.createElement('option');
+          option.value = "other_machine_model_manual";
+          option.textContent = "型番を「詳細な症状」欄にご記入ください";
+          modelNumberSelect.appendChild(option);
+        }
+        // Reset and populate trouble symptom checkboxes
+        troubleSymptomsDiv.innerHTML = '';
+        if (selectedMachine && troubleData[selectedMachine]) {
+          troubleData[selectedMachine].forEach(categoryItem => {
+            const categoryTitle = document.createElement('h3');
+            categoryTitle.className = 'font-semibold text-gray-700 mt-3 mb-1';
+            categoryTitle.textContent = categoryItem.category;
+            troubleSymptomsDiv.appendChild(categoryTitle);
+            categoryItem.symptoms.forEach(symptom => {
+              const label = document.createElement('label');
+              label.className = 'checkbox-label text-sm text-gray-600';
+              const checkbox = document.createElement('input');
+              checkbox.type = 'checkbox';
+              checkbox.id = symptom.id;
+              checkbox.name = 'symptoms';
+              checkbox.value = symptom.id;
+              checkbox.className = 'mr-2';
+              label.appendChild(checkbox);
+              label.appendChild(document.createTextNode(symptom.text));
+              troubleSymptomsDiv.appendChild(label);
+              troubleSymptomsDiv.appendChild(document.createElement('br'));
+            });
+          });
+        } else {
+          // If no machine type selected, show placeholder text
+          const p1 = document.createElement('p');
+          p1.className = 'text-sm text-gray-500';
+          p1.textContent = '機器の種類を選択すると、故障内容の選択肢が表示されます。';
+          troubleSymptomsDiv.appendChild(p1);
+          const p2 = document.createElement('p');
+          p2.className = 'text-sm text-gray-500';
+          p2.textContent = '当てはまるものをすべて選択してください。（複数選択可）';
+          troubleSymptomsDiv.appendChild(p2);
+        }
+      });
+    }
+
+    // Main file input change handler (limits to 5 images, 2 videos)
+    if (fileUploadInput) {
+      fileUploadInput.addEventListener('change', function(event) {
+        const newFiles = Array.from(event.target.files);
+        let imageCount = selectedFiles.filter(f => f.type.startsWith('image/')).length;
+        let videoCount = selectedFiles.filter(f => f.type.startsWith('video/')).length;
+        const MAX_IMAGES = 5;
+        const MAX_VIDEOS = 2;
+        const canAdd = [];
+        for (const file of newFiles) {
+          if (file.type.startsWith('image/')) {
+            if (imageCount < MAX_IMAGES) {
+              canAdd.push(file);
+              imageCount++;
+            } else {
+              alert(`画像は${MAX_IMAGES}枚までしかアップロードできません。`);
+              break;
+            }
+          } else if (file.type.startsWith('video/')) {
+            if (videoCount < MAX_VIDEOS) {
+              canAdd.push(file);
+              videoCount++;
+            } else {
+              alert(`動画は${MAX_VIDEOS}つまでしかアップロードできません。`);
+              break;
+            }
+          }
+        }
+        selectedFiles.push(...canAdd);
+        updateFilePreview();
+        fileUploadInput.value = '';  // reset input to allow re-selecting same file if needed
+      });
+    }
+
+    // Additional file input change handler (same limits)
+    if (additionalFileInput) {
+      additionalFileInput.addEventListener('change', function(event) {
+        const newFiles = Array.from(event.target.files);
+        let imageCount = selectedAdditionalFiles.filter(f => f.type.startsWith('image/')).length;
+        let videoCount = selectedAdditionalFiles.filter(f => f.type.startsWith('video/')).length;
+        const MAX_IMAGES = 5;
+        const MAX_VIDEOS = 2;
+        const canAdd = [];
+        for (const file of newFiles) {
+          if (file.type.startsWith('image/')) {
+            if (imageCount < MAX_IMAGES) {
+              canAdd.push(file);
+              imageCount++;
+            } else {
+              alert(`画像は${MAX_IMAGES}枚までしかアップロードできません。`);
+              break;
+            }
+          } else if (file.type.startsWith('video/')) {
+            if (videoCount < MAX_VIDEOS) {
+              canAdd.push(file);
+              videoCount++;
+            } else {
+              alert(`動画は${MAX_VIDEOS}つまでしかアップロードできません。`);
+              break;
+            }
+          }
+        }
+        selectedAdditionalFiles.push(...canAdd);
+        updateAdditionalPreview();
+        additionalFileInput.value = '';
+      });
+    }
+
+    // Update file preview list (main form)
+    function updateFilePreview() {
+      if (!filePreviewDiv) return;
+      filePreviewDiv.innerHTML = '';
+      selectedFiles.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'flex items-center justify-between p-2 bg-gray-100 rounded-md';
+        const fileNameSpan = document.createElement('span');
+        fileNameSpan.className = 'file-name-display text-sm truncate';
+        fileNameSpan.style.maxWidth = 'calc(100% - 60px)';
+        fileNameSpan.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'delete-file-btn text-xs text-red-500 hover:text-red-700 flex-shrink-0 cursor-pointer';
+        deleteBtn.textContent = '削除';
+        deleteBtn.onclick = () => {
+          selectedFiles.splice(index, 1);
+          updateFilePreview();
+        };
+        fileItem.appendChild(fileNameSpan);
+        fileItem.appendChild(deleteBtn);
+        filePreviewDiv.appendChild(fileItem);
+      });
+    }
+
+    // Update file preview list (additional form)
+    function updateAdditionalPreview() {
+      if (!additionalFilePreviewDiv) return;
+      additionalFilePreviewDiv.innerHTML = '';
+      selectedAdditionalFiles.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'flex items-center justify-between p-2 bg-gray-100 rounded-md';
+        const fileNameSpan = document.createElement('span');
+        fileNameSpan.className = 'text-sm truncate';
+        fileNameSpan.style.maxWidth = 'calc(100% - 60px)';
+        fileNameSpan.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'text-xs text-red-500 hover:text-red-700 flex-shrink-0 cursor-pointer';
+        deleteBtn.textContent = '削除';
+        deleteBtn.onclick = () => {
+          selectedAdditionalFiles.splice(index, 1);
+          updateAdditionalPreview();
+        };
+        fileItem.appendChild(fileNameSpan);
+        fileItem.appendChild(deleteBtn);
+        additionalFilePreviewDiv.appendChild(fileItem);
+      });
+    }
+
+    // Handle main form submission
+    const repairForm = document.getElementById('repairForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const completionScreen = document.getElementById('completionScreen');
+    if (repairForm) {
+      repairForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        // Front-end validation for required fields
+        let formValid = true;
+        let firstInvalid = null;
+        // Clear previous error indicators
+        this.querySelectorAll('.error-message-text').forEach(el => el.remove());
+        this.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
+        const requiredFields = this.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+          if (!field.value.trim()) {
+            formValid = false;
+            field.classList.add('border-red-500');
+            if (!firstInvalid) firstInvalid = field;
+            // Append error message text if not already
+            if (!field.parentNode.querySelector('.error-message-text')) {
+              const errorMsg = document.createElement('p');
+              errorMsg.className = 'error-message-text text-xs text-red-500 mt-1';
+              errorMsg.textContent = '未入力の項目があります';
+              field.parentNode.appendChild(errorMsg);
+            }
+          }
         });
-      });
-
-      $('#addMediaBtn').click(() => {
-        $('#thankYouSection').hide();
-        $('#additionalMediaSection').show();
-      });
-
-      $('#closeLiffBtn').click(() => liff.closeWindow());
-
-      $('#sendAdditionalMedia').click(() => {
-        const fileInput = $('#additionalFile')[0];
-        if (!fileInput.files[0]) {
-          alert('ファイルを選択してください');
+        if (!formValid) {
+          alert('未入力の項目があります。ご確認ください。');
+          if (firstInvalid) firstInvalid.focus();
           return;
         }
-
-        const reader = new FileReader();
-        reader.onload = () => {
-          const base64Data = reader.result.split(',')[1];
-          const formData = new FormData();
-          Object.entries(savedData).forEach(([k, v]) => formData.append(k, v));
-          formData.append('fileData', base64Data);
-          formData.append('fileName', fileInput.files[0].name);
-          formData.append('fileMimeType', fileInput.files[0].type);
-          formData.append('additionalUpload', 'true');
-
-          $.ajax({
-            url: scriptURL,
+        // All required fields filled, proceed to submit
+        loadingOverlay.classList.remove('hidden');
+        try {
+          // Gather form data
+          const storeName = document.getElementById('storeName').value.trim();
+          const contactName = document.getElementById('contactName').value.trim();
+          const phoneNumber = document.getElementById('phoneNumber').value.trim();
+          const address = document.getElementById('address').value.trim();
+          const machineTypeVal = machineTypeSelect.value;
+          const machineTypeText = machineTypeSelect.options[machineTypeSelect.selectedIndex].text;
+          const modelText = modelNumberSelect.options[modelNumberSelect.selectedIndex] 
+                              ? modelNumberSelect.options[modelNumberSelect.selectedIndex].text 
+                              : '';
+          const symptomEls = document.querySelectorAll('input[name="symptoms"]:checked');
+          const symptomTexts = Array.from(symptomEls).map(el => el.parentNode.textContent.trim());
+          const detailedDescription = document.getElementById('detailedDescription').value.trim();
+          const userIdValue = document.getElementById('userId').value;
+          const displayNameValue = document.getElementById('displayName').value;
+          // Convert selected files to base64 strings
+          let filesData = [];
+          if (selectedFiles.length > 0) {
+            const dataURLs = await Promise.all(selectedFiles.map(file => {
+              return new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+              });
+            }));
+            filesData = dataURLs.map((dataURL, i) => {
+              const base64 = dataURL.split(',')[1];
+              return {
+                name: selectedFiles[i].name,
+                type: selectedFiles[i].type,
+                data: base64
+              };
+            });
+          }
+          // Prepare payload for GAS
+          const payload = {
+            userId: userIdValue,
+            displayName: displayNameValue,
+            storeName: storeName,
+            contactName: contactName,
+            phoneNumber: phoneNumber,
+            address: address,
+            equipmentType: machineTypeText,
+            modelNumber: modelText,
+            symptoms: symptomTexts,
+            detailedDescription: detailedDescription,
+            files: filesData
+          };
+          const scriptURL = 'YOUR_GAS_DEPLOY_URL';  // GAS Web App endpoint URL
+          const response = await fetch(scriptURL, {
             method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false
-          }).done(() => {
-            alert('追加写真・動画の送信が完了しました');
-            liff.closeWindow();
-          }).fail(() => {
-            alert('追加送信に失敗しました');
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
           });
-        };
-        reader.readAsDataURL(fileInput.files[0]);
+          if (!response.ok) throw new Error('ネットワークまたはサーバーエラーにより送信できませんでした');
+          const result = await response.json();
+          if (result.status !== 'success') {
+            throw new Error(result.message || '送信中にエラーが発生しました');
+          }
+          // Success: reset and show completion
+          selectedFiles = [];
+          updateFilePreview();
+          loadingOverlay.classList.add('hidden');
+          repairForm.classList.add('hidden');
+          completionScreen.classList.remove('hidden');
+        } catch (err) {
+          console.error('Main form submission error:', err);
+          loadingOverlay.classList.add('hidden');
+          alert('送信に失敗しました。お手数ですが再度お試しください。\n' + err.message);
+        }
       });
-    });
+    }
+
+    // Switch to additional upload form
+    const addMoreBtn = document.getElementById('addMoreBtn');
+    const additionalFormElem = document.getElementById('additionalForm');
+    if (addMoreBtn) {
+      addMoreBtn.addEventListener('click', () => {
+        completionScreen.classList.add('hidden');
+        if (additionalFormElem) additionalFormElem.classList.remove('hidden');
+      });
+    }
+
+    // Handle additional file upload form submission
+    if (additionalFormElem) {
+      additionalFormElem.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        if (selectedAdditionalFiles.length === 0) {
+          alert('ファイルを選択してください。');
+          return;
+        }
+        loadingOverlay.classList.remove('hidden');
+        try {
+          const userIdValue = document.getElementById('userIdAdditional').value;
+          const displayNameValue = document.getElementById('displayNameAdditional').value;
+          // Convert additional files to base64
+          const dataURLs = await Promise.all(selectedAdditionalFiles.map(file => {
+            return new Promise(resolve => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result);
+              reader.readAsDataURL(file);
+            });
+          }));
+          const filesData = dataURLs.map((dataURL, i) => {
+            const base64 = dataURL.split(',')[1];
+            return {
+              name: selectedAdditionalFiles[i].name,
+              type: selectedAdditionalFiles[i].type,
+              data: base64
+            };
+          });
+          const payload = {
+            userId: userIdValue,
+            displayName: displayNameValue,
+            files: filesData,
+            isAdditional: true
+          };
+          const scriptURL = 'https://script.google.com/macros/s/AKfycbykJs8Z1bNdItXwKLiAV_3SnZBazb0fdlpSAEVT1MU0OYOrbCBb469itsJ2dDlrhCN7/exec';  // same GAS endpoint
+          const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!response.ok) throw new Error('ネットワークまたはサーバーエラーにより送信できませんでした');
+          const result = await response.json();
+          if (result.status !== 'success') {
+            throw new Error(result.message || '送信中にエラーが発生しました');
+          }
+          // Success: notify user and reset file list (keep form open for more uploads)
+          loadingOverlay.classList.add('hidden');
+          alert('ファイルを送信しました。');
+          selectedAdditionalFiles = [];
+          updateAdditionalPreview();
+        } catch (err) {
+          console.error('Additional upload error:', err);
+          loadingOverlay.classList.add('hidden');
+          alert('送信に失敗しました。もう一度お試しください。\n' + err.message);
+        }
+      });
+    }
+
+    // Handle "Return to LINE" buttons
+    const closeLiffBtn = document.getElementById('closeLiffBtn');
+    const closeLiffBtn2 = document.getElementById('closeLiffBtn2');
+    if (closeLiffBtn) {
+      closeLiffBtn.addEventListener('click', () => { if (liff) liff.closeWindow(); });
+    }
+    if (closeLiffBtn2) {
+      closeLiffBtn2.addEventListener('click', () => { if (liff) liff.closeWindow(); });
+    }
   </script>
 </body>
 </html>
