@@ -493,6 +493,8 @@
     const repairForm = document.getElementById('repairForm');
     const loadingOverlay = document.getElementById('loadingOverlay');
     const completionScreen = document.getElementById('completionScreen');
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbz6QA3iivbXAqZm7AXprRIYoB_LX8aPFaFcBhLTsGzVgi3nnEztnCahwj48_KigZSYb/exec';
+
     if (repairForm) {
       repairForm.addEventListener('submit', async function(event) {
         event.preventDefault();
@@ -573,18 +575,25 @@
             detailedDescription: detailedDescription,
             files: filesData
           };
-          const scriptURL = 'https://script.google.com/macros/s/AKfycbz6S-sokWofM34CIHuWzVkW_3GyQofF1NAdCFOj2FyCvWrFq16hstglLonEIK5Iy1K1/exec';  // GAS Web App endpoint URL
+
           const response = await fetch(scriptURL, {
             method: 'POST',
-            mode: 'cors', // ✅ 明示的にCORSモード指定
+            mode: 'cors',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(payload)
           });
-          
+
           const result = await response.json();
-          if (!response.ok || result.status !== 'success') {
-            throw new Error(result.message || '送信中にエラーが発生しました');
+          console.log('fetch status:', response.status);
+          console.log('returned JSON:', result);
+
+          if (!response.ok) {
+            throw new Error(`HTTP エラー: ${response.status}`);
           }
+          if (result.status !== 'success') {
+            throw new Error(result.message || 'サーバー側で失敗と判定されました');
+          }
+
           // Success: reset and show completion
           selectedFiles = [];
           updateFilePreview();
@@ -643,18 +652,25 @@
             files: filesData,
             isAdditional: true
           };
-          const scriptURL = 'https://script.google.com/macros/s/AKfycbz6S-sokWofM34CIHuWzVkW_3GyQofF1NAdCFOj2FyCvWrFq16hstglLonEIK5Iy1K1/exec';  // same GAS endpoint
           const response = await fetch(scriptURL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(payload)
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload)
           });
-          if (!response.ok) throw new Error('ネットワークまたはサーバーエラーにより送信できませんでした');
+
           const result = await response.json();
-          if (result.status !== 'success') {
-            throw new Error(result.message || '送信中にエラーが発生しました');
+          console.log('additional fetch status:', response.status);
+          console.log('additional returned JSON:', result);
+
+          if (!response.ok) {
+            throw new Error(`HTTP エラー: ${response.status}`);
           }
-          // Success: notify user and reset file list (keep form open for more uploads)
+          if (result.status !== 'success') {
+            throw new Error(result.message || 'サーバー側で失敗と判定されました');
+          }
+
+          // Success: notify user and reset file list
           loadingOverlay.classList.add('hidden');
           alert('ファイルを送信しました。');
           selectedAdditionalFiles = [];
