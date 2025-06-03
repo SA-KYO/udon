@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORS テストページ</title>
+  <title>GAS CORS テスト</title>
 </head>
 <body>
   <h2>GAS CORS テスト</h2>
   <button id="btnTest">GAS に GET リクエストを送る</button>
-  <pre id="resultArea" style="white-space: pre-wrap; border: 1px solid #ccc; padding: 8px; margin-top: 16px;"></pre>
+  <pre id="resultArea" style="white-space: pre-wrap; border: 1px solid #ccc; padding: 8px; margin-top: 16px;">
+  </pre>
 
   <script>
-    // ここを、先ほどコピーした「exec URL」に書き換えてください！
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwVJrOuWc4Gk8zvXG3pna71NPwDZ7wI5GZUBHBYCgWvL-ts_reOp2_u3X6TmQ5-0sLM/exec';
+    // ↓↓ ここを、先ほどコピーした “exec URL” に必ず書き換えてください ↓↓
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwLFKSGEMtznJclv-JGAqYFo-reSTWx9TZs0LjGV-Rg_1yRvFygQKbf7vcIDEgWsbCz/exec';
 
     document.getElementById('btnTest').addEventListener('click', async () => {
       const resultArea = document.getElementById('resultArea');
@@ -25,14 +26,15 @@
         });
         console.log('ステータス:', response.status, response.statusText);
 
-        // JSONとしてパースしてみる
+        // レスポンスを JSON パースしてみる
         const data = await response.json();
         console.log('返却された JSON:', data);
 
-        // ブラウザに表示
+        // 画面に表示
         resultArea.textContent = 
           `Status: ${response.status} ${response.statusText}\n` +
           `JSON: ${JSON.stringify(data)}`;
+
       } catch (err) {
         console.error('fetch エラー:', err);
         resultArea.textContent = 'fetch エラー: ' + err.message;
