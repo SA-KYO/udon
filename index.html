@@ -1,45 +1,16 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GAS CORS テスト</title>
-</head>
-<body>
-  <h2>GAS CORS テスト</h2>
-  <button id="btnTest">GAS に GET リクエストを送る</button>
-  <pre id="resultArea" style="white-space: pre-wrap; border: 1px solid #ccc; padding: 8px; margin-top: 16px;"></pre>
-
-  <script>
-    // ───────────────────────────────────────────────────────────
-    // ↑↑ ここの URL は、ステップ1-1 でデプロイした “exec URL” を丸ごとコピペ ↓↓
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwqcszjl3EogogLvB3YP_FPfN_5A1W1Ve6Y8dFcfok2PxGnDibKY80q7Tr-4ME9butd/exec';
-    // ───────────────────────────────────────────────────────────
-
-    document.getElementById('btnTest').addEventListener('click', async () => {
-      const resultArea = document.getElementById('resultArea');
-      resultArea.textContent = '送信中…';
-
-      try {
-        const response = await fetch(scriptURL, {
-          method: 'GET',
-          mode: 'cors'
-        });
-        console.log('ステータス:', response.status, response.statusText);
-
-        // レスポンスを JSON としてパース
-        const data = await response.json();
-        console.log('返却された JSON:', data);
-
-        // 画面に返却値を表示
-        resultArea.textContent =
-          `Status: ${response.status} ${response.statusText}\n` +
-          `JSON: ${JSON.stringify(data)}`;
-      } catch (err) {
-        console.error('fetch エラー:', err);
-        resultArea.textContent = 'fetch エラー: ' + err.message;
-      }
-    });
-  </script>
-</body>
-</html>
+<script>
+fetch('https://script.google.com/macros/s/AKfycbwqcszjl3EogogLvB3YP_FPfN_5A1W1Ve6Y8dFcfok2PxGnDibKY80q7Tr-4ME9butd/exec', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ test: 'data' })
+})
+.then(res => res.json())
+.then(data => {
+  console.log('成功:', data);
+})
+.catch(err => {
+  console.error('失敗:', err);
+});
+</script>
