@@ -6,7 +6,7 @@
   <title>修理依頼フォーム</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- LIFF SDK（LIFF で動かす場合のみ必要） -->
+  <!-- LIFF SDK（LIFF 環境で動かす場合のみ必要）-->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     /* 必須項目に赤いアスタリスクを追加 */
@@ -19,7 +19,7 @@
       <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">修理依頼フォーム</h1>
     </header>
 
-    <!-- Main Form -->
+    <!-- メインフォーム -->
     <form id="repairForm" class="space-y-6">
       <!-- お客様情報 -->
       <div class="form-section">
@@ -194,34 +194,31 @@
     //――――――――――――――――――――
     // 変数定義
     //――――――――――――――――――――
-    // ★以下の URL を、ご自身が GAS を導入したときに表示された「exec URL」に置き換えてください
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwYFZKuiVEyDHAYDsKwyrHEuIVgt8EjxCfeD5dgzi8YqaXkVcg5wdevtpv3VcWXvwSu/exec';
+    // ★ 以下の URL を、ご自身が GAS を導入したときに表示された exec URL に書き換えてください ★
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbz959nC9zTGxWh_qU1GqTrW7SXms6vljbPEL68HGoX6q08vnOHVhTQ7KCUkgCzpovph/exec';
 
-    const machineTypeSelect = document.getElementById('machineType');
-    const modelNumberSelect = document.getElementById('modelNumber');
-    const troubleSymptomsDiv = document.getElementById('troubleSymptoms');
-
-    const fileUploadInput = document.getElementById('fileUpload');
-    const filePreviewDiv   = document.getElementById('filePreview');
+    const machineTypeSelect   = document.getElementById('machineType');
+    const modelNumberSelect   = document.getElementById('modelNumber');
+    const troubleSymptomsDiv  = document.getElementById('troubleSymptoms');
+    const fileUploadInput     = document.getElementById('fileUpload');
+    const filePreviewDiv      = document.getElementById('filePreview');
     const additionalFileInput = document.getElementById('additionalFile');
     const additionalFilePreviewDiv = document.getElementById('additionalFilePreview');
 
     let selectedFiles = [];             // メインフォームの選択ファイル
     let selectedAdditionalFiles = [];   // 追加フォームの選択ファイル
 
-    const repairForm       = document.getElementById('repairForm');
-    const loadingOverlay   = document.getElementById('loadingOverlay');
-    const completionScreen = document.getElementById('completionScreen');
-    const addMoreBtn       = document.getElementById('addMoreBtn');
+    const repairForm         = document.getElementById('repairForm');
+    const loadingOverlay     = document.getElementById('loadingOverlay');
+    const completionScreen   = document.getElementById('completionScreen');
+    const addMoreBtn         = document.getElementById('addMoreBtn');
     const additionalFormElem = document.getElementById('additionalForm');
-    const closeLiffBtn     = document.getElementById('closeLiffBtn');
-    const closeLiffBtn2    = document.getElementById('closeLiffBtn2');
+    const closeLiffBtn       = document.getElementById('closeLiffBtn');
+    const closeLiffBtn2      = document.getElementById('closeLiffBtn2');
 
     //――――――――――――――――――――
     // 1) LIFF SDK 初期化（LIFF 環境で動かす場合のみ）
     //――――――――――――――――――――
-    // GitHub Pages などでテストする場合は liff が定義されていない可能性があります。
-    // その場合は ↓ の init 部分を try-catch で囲むか、内容をコメントアウトしても OK です。
     try {
       liff.init({ liffId: '2007442822-Nal0O7lP' })
         .then(() => {
@@ -241,9 +238,9 @@
         })
         .catch(err => console.error('LIFF init error:', err));
     } catch(e) {
-      console.warn('LIFF SDK が読み込まれていないか、LIFF ではない環境です。', e);
-      // GitHub Pages や通常ブラウザでテストしている場合は userId は空になりますが、
-      // POST 自体は実行できるため、そのままフォーム送信を試せます。
+      console.warn('LIFF SDK が読み込まれていない環境です。', e);
+      // GitHub Pages 等では LIFF がないため userId は空のままになりますが、
+      // フォーム送信（POST）自体は動作します。
     }
 
     //――――――――――――――――――――
@@ -342,13 +339,13 @@
     };
 
     //――――――――――――――――――――
-    // 3) 機器種別を選択したときに「型番」と「故障内容」を動的に生成
+    // 3) 機器種別を選択したときに「型番」と「故障内容」を動的生成
     //――――――――――――――――――――
     if (machineTypeSelect) {
       machineTypeSelect.addEventListener('change', function() {
         const selectedMachine = this.value;
 
-        // --- 型番（modelNumberSelect）をクリア＆再構築 ---
+        // ◆ 型番セレクトをクリア＆再生成
         modelNumberSelect.innerHTML = '<option value="">選択してください</option>';
         if (selectedMachine && modelData[selectedMachine]) {
           modelData[selectedMachine].forEach(model => {
@@ -358,14 +355,13 @@
             modelNumberSelect.appendChild(option);
           });
         } else if (selectedMachine === "other_machine") {
-          // 「その他」を選んだときは、型番を手入力してもらう旨の選択肢を出す
           const option = document.createElement('option');
           option.value = "other_machine_model_manual";
           option.textContent = "型番を「詳細な症状」欄にご記入ください";
           modelNumberSelect.appendChild(option);
         }
 
-        // --- 故障内容（troubleSymptomsDiv）をクリア＆再構築 ---
+        // ◆ 故障内容チェックボックスをクリア＆再生成
         troubleSymptomsDiv.innerHTML = '';
         if (selectedMachine && troubleData[selectedMachine]) {
           troubleData[selectedMachine].forEach(categoryItem => {
@@ -390,7 +386,6 @@
             });
           });
         } else {
-          // 機器種別が選ばれていない、または “other_machine” 以外のデータが存在しないとき
           const p1 = document.createElement('p');
           p1.className = 'text-sm text-gray-500';
           p1.textContent = '機器の種類を選択すると、故障内容の選択肢が表示されます。';
@@ -709,7 +704,7 @@
             };
           });
 
-          // 2) Payload（追加アップロードフラグ isAdditional=true）
+          // 2) Payload（isAdditional=true）
           const payload = {
             userId:      userIdValue,
             displayName: displayNameValue,
