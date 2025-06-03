@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>修理依頼フォーム</title>
-  <!-- Tailwind CSS CDN（このままでも動作します） -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- LIFF SDK（LIFF で動かす場合は必須。GitHub Pages 上でテストする場合は liff がなくても動作しますが、userId は取れません） -->
+  <!-- LIFF SDK（LIFF で動かす場合のみ必要） -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     /* 必須項目に赤いアスタリスクを追加 */
@@ -191,11 +191,11 @@
   </div>
 
   <script>
-    //==========================================
+    //――――――――――――――――――――
     // 変数定義
-    //==========================================
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzGMrC5RkRTAzsVQARYxMq2HBmsfqLkjn3LOB7x_Tj8_LTl4sZF7mI7_ibOO4A-PcsC/exec';
-    // ※上記は「ウェブアプリとして導入」後に表示された exec URL に置き換えること
+    //――――――――――――――――――――
+    // ★以下の URL を、ご自身が GAS を導入したときに表示された「exec URL」に置き換えてください
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwYFZKuiVEyDHAYDsKwyrHEuIVgt8EjxCfeD5dgzi8YqaXkVcg5wdevtpv3VcWXvwSu/exec';
 
     const machineTypeSelect = document.getElementById('machineType');
     const modelNumberSelect = document.getElementById('modelNumber');
@@ -217,10 +217,10 @@
     const closeLiffBtn     = document.getElementById('closeLiffBtn');
     const closeLiffBtn2    = document.getElementById('closeLiffBtn2');
 
-    //==========================================
+    //――――――――――――――――――――
     // 1) LIFF SDK 初期化（LIFF 環境で動かす場合のみ）
-    //==========================================
-    // GitHub Pages 上などでテストする場合は liff が定義されていない可能性があります。
+    //――――――――――――――――――――
+    // GitHub Pages などでテストする場合は liff が定義されていない可能性があります。
     // その場合は ↓ の init 部分を try-catch で囲むか、内容をコメントアウトしても OK です。
     try {
       liff.init({ liffId: '2007442822-Nal0O7lP' })
@@ -246,9 +246,9 @@
       // POST 自体は実行できるため、そのままフォーム送信を試せます。
     }
 
-    //==========================================
+    //――――――――――――――――――――
     // 2) 機器種別に合わせて「型番」と「故障内容」を動的表示
-    //==========================================
+    //――――――――――――――――――――
     const modelData = {
       seimenki: [
         { value: 'm305p', text: 'M305-P' },
@@ -341,9 +341,9 @@
       ]
     };
 
-    //==========================================
+    //――――――――――――――――――――
     // 3) 機器種別を選択したときに「型番」と「故障内容」を動的に生成
-    //==========================================
+    //――――――――――――――――――――
     if (machineTypeSelect) {
       machineTypeSelect.addEventListener('change', function() {
         const selectedMachine = this.value;
@@ -403,9 +403,9 @@
       });
     }
 
-    //==========================================
+    //――――――――――――――――――――
     // 4) メインフォームのファイル選択（画像5枚、動画2本まで）
-    //==========================================
+    //――――――――――――――――――――
     if (fileUploadInput) {
       fileUploadInput.addEventListener('change', function(event) {
         const newFiles = Array.from(event.target.files);
@@ -464,9 +464,9 @@
       });
     }
 
-    //==========================================
+    //――――――――――――――――――――
     // 5) 追加フォームのファイル選択（画像5枚、動画2本まで）
-    //==========================================
+    //――――――――――――――――――――
     if (additionalFileInput) {
       additionalFileInput.addEventListener('change', function(event) {
         const newFiles = Array.from(event.target.files);
@@ -525,9 +525,9 @@
       });
     }
 
-    //==========================================
+    //――――――――――――――――――――
     // 6) メインフォームの送信処理
-    //==========================================
+    //――――――――――――――――――――
     if (repairForm) {
       repairForm.addEventListener('submit', async function(event) {
         event.preventDefault();
@@ -617,11 +617,11 @@
             files: filesData
           };
 
-          // 4) fetch で GAS に POST（CORS: 'cors'） 
+          // 4) fetch で GAS に POST（CORS: 'cors'）
           const response = await fetch(scriptURL, {
             method: 'POST',
-            mode: 'cors',  // CORS リクエスト
-            headers: { 'Content-Type': 'text/plain' },  
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(payload)
           });
 
@@ -667,9 +667,9 @@
       });
     }
 
-    //==========================================
+    //――――――――――――――――――――
     // 7) 「今回の依頼に追加で画像・動画を送る」ボタン
-    //==========================================
+    //――――――――――――――――――――
     if (addMoreBtn) {
       addMoreBtn.addEventListener('click', () => {
         completionScreen.classList.add('hidden');
@@ -677,9 +677,9 @@
       });
     }
 
-    //==========================================
+    //――――――――――――――――――――
     // 8) 追加フォームの送信処理
-    //==========================================
+    //――――――――――――――――――――
     if (additionalFormElem) {
       additionalFormElem.addEventListener('submit', async function(event) {
         event.preventDefault();
@@ -757,9 +757,9 @@
       });
     }
 
-    //==========================================
+    //――――――――――――――――――――
     // 9) 「LINE に戻る」ボタン
-    //==========================================
+    //――――――――――――――――――――
     if (closeLiffBtn) {
       closeLiffBtn.addEventListener('click', () => {
         if (typeof liff !== 'undefined' && liff.closeWindow) {
