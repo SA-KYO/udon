@@ -13,7 +13,7 @@
   <style>
     .required-mark::after {
       content: " *";
-      color: #6B7280; /* Tailwind gray-500 */
+      color: #6B7280; /* Tailwind の gray-500 相当 */
     }
   </style>
 </head>
@@ -27,7 +27,7 @@
     <!-- メインフォーム -->
     <form id="repairForm" class="space-y-6 bg-gray-50 p-6 rounded-lg shadow-sm opacity-50 pointer-events-none">
       <!-- 最初は LIFF の初期化が終わるまで半透明＆入力不可にしておく -->
-      
+
       <!-- お客様情報 -->
       <div class="form-section">
         <label for="storeName" class="block text-sm font-medium text-gray-700 required-mark">店舗名</label>
@@ -199,15 +199,17 @@
     // フォームを半透明＆無効にしておき、
     // プロフィール取得が済んだら通常状態に戻す
     const repairForm = document.getElementById("repairForm");
+    // 最初は CSS で既に "opacity-50 pointer-events-none" がついている
 
     try {
       liff.init({ liffId: '2007442822-Nal0O7lP' })
         .then(() => {
           if (!liff.isLoggedIn()) {
-            liff.login();
-          } else {
-            return liff.getProfile();
+            return liff.login();
           }
+        })
+        .then(() => {
+          return liff.getProfile();
         })
         .then(profile => {
           if (profile) {
@@ -218,19 +220,19 @@
             console.log("LIFF で取得した userId:", profile.userId);
           }
         })
-        .catch(err => console.error("LIFF init error:", err))
+        .catch(err => {
+          console.error("LIFF init/getProfile error:", err);
+        })
         .finally(() => {
           // ここでフォームを通常状態に戻す
           liffReady = true;
-          repairForm.style.opacity = "1";
-          repairForm.style.pointerEvents = "auto";
+          repairForm.classList.remove("opacity-50", "pointer-events-none");
         });
     } catch (e) {
-      console.warn("LIFF SDK が読み込まれていません:", e);
+      console.warn("LIFF SDK が読み込まれていない可能性があります:", e);
       // LIFF が読み込まれていない場合でも、フォームは使えるようにしておく
       liffReady = true;
-      repairForm.style.opacity = "1";
-      repairForm.style.pointerEvents = "auto";
+      repairForm.classList.remove("opacity-50", "pointer-events-none");
     }
 
     /***************************************************************
@@ -542,9 +544,9 @@
     repairFormScope.addEventListener('submit', async function(event) {
       event.preventDefault();
 
-      // LIFF 初期化／プロフィール取得が完了するまでは送信させない
+      // LIFF 初期化／プロフィール取得が完了するまでは送信しない
       if (!liffReady) {
-        alert("LINE プロフィール取得待機中です。少しお待ちください。");
+        alert("LINE プロフィール取得中です。しばらくお待ちください。");
         return;
       }
 
@@ -575,7 +577,7 @@
         return;
       }
 
-      // (3) ローディングオーバーレイを表示
+      // (3) ローディングオーバーレイ
       loadingOverlay.classList.remove('hidden');
 
       try {
@@ -631,8 +633,8 @@
         };
 
         // (7) fetch で Apps Script の /exec URL に POST
-        //     ※ 必ずデプロイした最新の /exec URL に書き換えてください
-        const scriptURL = "https://script.google.com/macros/s/AKfycbx8VDy1DvjsPsBsD_VgcsbTocAoq4kXOu65aGTxBAyt_d5j2ZZ2xV3IvWqbrsykiwsn/exec";
+        //     ※ 必ず最新の /exec URL に書き換えてください
+        const scriptURL = "https://script.google.com/macros/s/AKfycbxkYxD9eU37zInMP9ui9KL37genhPaUfsUBW_HGdDzzUxpeHBTSvZ2kLTdrgcWuMD7X/exec";
 
         const response = await fetch(scriptURL, {
           method: "POST",
@@ -717,7 +719,7 @@
           };
 
           // GAS の /exec URL（必ず本番用に置き換える）
-          const scriptURL = "https://script.google.com/macros/s/AKfycbx8VDy1DvjsPsBsD_VgcsbTocAoq4kXOu65aGTxBAyt_d5j2ZZ2xV3IvWqbrsykiwsn/exec";
+          const scriptURL = "https://script.google.com/macros/s/AKfycbxkYxD9eU37zInMP9ui9KL37genhPaUfsUBW_HGdDzzUxpeHBTSvZ2kLTdrgcWuMD7X/exec";
 
           const response = await fetch(scriptURL, {
             method: "POST",
