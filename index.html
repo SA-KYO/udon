@@ -4,10 +4,14 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>修理依頼フォーム</title>
-  <!-- Tailwind CSS CDN -->
+
+  <!-- Tailwind CSS CDN（プロダクションでは PostCSS などを推奨しますが簡易版として使います） -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- LIFF SDK を必ず読み込む -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
   <style>
-    /* 必須マークの色を少しおさえたいときはここを編集 */
+    /* 必須マークを灰色にしたい場合など、ここで調整 */
     .required-mark::after {
       content: " *";
       color: #6B7280; /* Tailwind の gray-500 */
@@ -74,7 +78,7 @@
         </select>
       </div>
 
-      <!-- 故障内容（複数選択可） -->
+      <!-- 故障内容 -->
       <div class="form-section">
         <label class="block text-sm font-medium text-gray-700">故障内容（複数選択可）</label>
         <div id="troubleSymptoms"
@@ -156,7 +160,7 @@
       <div id="additionalFilePreview" class="mt-3 space-y-2"></div>
       <p class="text-xs text-gray-500">※画像は最大5枚、動画は最大2本まで選択可能</p>
 
-      <!-- Hidden: LINE ユーザー情報 -->
+      <!-- Hidden: LINE情報 -->
       <input type="hidden" id="userIdAdditional" name="userId" />
       <input type="hidden" id="displayNameAdditional" name="displayName" />
 
@@ -186,7 +190,7 @@
   <script>
     /**************************************************************************
      * 1) LIFF SDK の初期化と LINE ユーザー情報取得
-     *    LIFF ID は各自のものに置き換えてください。
+     *    ※ 必ず <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script> を head に書く
      **************************************************************************/
     try {
       liff.init({ liffId: '2007442822-Nal0O7lP' })
@@ -199,6 +203,7 @@
         })
         .then(profile => {
           if (profile) {
+            // LIFF から取得した userId / displayName を Hidden フィールドにセット
             document.getElementById('userId').value = profile.userId;
             document.getElementById('displayName').value = profile.displayName || '';
             document.getElementById('userIdAdditional').value = profile.userId;
@@ -207,12 +212,12 @@
         })
         .catch(err => console.error('LIFF init error:', err));
     } catch (e) {
-      // LIFF SDK が読み込まれていない場合でも、ここで止まらず処理が続行されます
+      // LIFF SDK が読み込まれていない場合はここに飛ぶ。落ちないよう設計してあるので問題なし。
       console.warn('LIFF SDK が読み込まれていません。', e);
     }
 
     /**************************************************************************
-     * 2) 型番データ・故障内容データの定義（省略せずそのまま流用してください）
+     * 2) 型番・故障内容のデータ定義
      **************************************************************************/
     const modelData = {
       seimenki: [
@@ -257,7 +262,7 @@
         { category: '動作の異常', symptoms: [
             { id: 'seimenki_roll_not_rotating', text: 'ロール（ローラー）が回転しない' },
             { id: 'seimenki_noodle_not_feeding', text: '麺がうまく入っていかない' },
-            { id: 'seimenki_belt_issue',         text: 'ベルトコンベアが動かない、ま�渋れて片寄る' }
+            { id: 'seimenki_belt_issue',         text: 'ベルトコンベアが動かない、または片寄る' }
         ]},
         { category: '音に関する問題', symptoms: [
             { id: 'seimenki_noise', text: '異音がする（※動画での報告を推奨します）' }
@@ -306,7 +311,7 @@
     };
 
     //--------------------------------------------------
-    // 3) DOM 要素を取得
+    // 3) DOM 要素取得
     //--------------------------------------------------
     const machineTypeSelect     = document.getElementById('machineType');
     const modelNumberSelect     = document.getElementById('modelNumber');
@@ -327,22 +332,22 @@
     const closeLiffBtn2    = document.getElementById('closeLiffBtn2');
 
     //--------------------------------------------------
-    // 4) ファイルプレビュー用の配列（メイン・追加）
+    // 4) ファイルプレビュー用の配列（メイン・追加ともに）
     //--------------------------------------------------
     let selectedFiles = [];
     let selectedAdditionalFiles = [];
 
     //--------------------------------------------------
-    // 5) 機器選択→型番・故障内容を動的生成
+    // 5) 機器の種類セレクト→ 型番 & 故障内容チェックボックスを動的生成
     //--------------------------------------------------
     if (machineTypeSelect) {
       machineTypeSelect.addEventListener('change', function() {
         const selectedMachine = this.value;
 
-        // 型番セレクトをクリア
+        // ① 型番の <select> をリセット
         modelNumberSelect.innerHTML = '<option value="">選択してください</option>';
 
-        // 対応 modelData があれば option を追加
+        // ② 該当する modelData があれば <option> を追加
         if (selectedMachine && modelData[selectedMachine]) {
           modelData[selectedMachine].forEach(model => {
             const option = document.createElement('option');
@@ -352,6 +357,7 @@
             modelNumberSelect.appendChild(option);
           });
         } else if (selectedMachine === "other_machine") {
+          // 「その他」の場合
           const option = document.createElement('option');
           option.value = "other_machine_model_manual";
           option.textContent = "型番を「詳細な症状」欄にご記入ください";
@@ -359,10 +365,10 @@
           modelNumberSelect.appendChild(option);
         }
 
-        // 故障内容をクリア
+        // ③ 故障内容（チェックボックス）領域をリセット
         troubleSymptomsDiv.innerHTML = "";
 
-        // 対応 troubleData があればチェックボックスを表示
+        // ④ 該当する troubleData があればチェックボックスを追加
         if (selectedMachine && troubleData[selectedMachine]) {
           troubleData[selectedMachine].forEach(categoryItem => {
             const categoryTitle = document.createElement('h3');
@@ -386,7 +392,7 @@
             });
           });
         } else {
-          // 機器未選択 or データなし の場合は案内文のみ
+          // 機器未選択 or データなしのときは案内文表示
           const p1 = document.createElement('p');
           p1.className = 'text-sm text-gray-500';
           p1.textContent = '機器の種類を選択すると、故障内容の選択肢が表示されます。';
@@ -400,16 +406,16 @@
     }
 
     //--------------------------------------------------
-    // 6) ファイル選択（メイン）→ プレビュー更新
+    // 6) ファイル選択（メインフォーム） → プレビュー
     //--------------------------------------------------
     if (fileUploadInput) {
       fileUploadInput.addEventListener('change', function(event) {
-        const newFiles = Array.from(event.target.files);
-        let imageCount = selectedFiles.filter(f => f.type.startsWith('image/')).length;
-        let videoCount = selectedFiles.filter(f => f.type.startsWith('video/')).length;
+        const newFiles   = Array.from(event.target.files);
+        let imageCount   = selectedFiles.filter(f => f.type.startsWith('image/')).length;
+        let videoCount   = selectedFiles.filter(f => f.type.startsWith('video/')).length;
         const MAX_IMAGES = 5;
         const MAX_VIDEOS = 2;
-        const canAdd = [];
+        const canAdd     = [];
 
         for (const file of newFiles) {
           if (file.type.startsWith('image/')) {
@@ -432,12 +438,12 @@
         }
         selectedFiles.push(...canAdd);
         updateFilePreview();
-        fileUploadInput.value = "";
+        fileUploadInput.value = ""; // 同じファイルを再度選択できるようリセット
       });
     }
 
     //--------------------------------------------------
-    // 7) ファイルプレビュー（メイン）
+    // 7) ファイルプレビュー表示（メイン用）
     //--------------------------------------------------
     function updateFilePreview() {
       if (!filePreviewDiv) return;
@@ -464,16 +470,16 @@
     }
 
     //--------------------------------------------------
-    // 8) ファイル選択（追加アップロード）→ プレビュー
+    // 8) ファイル選択（追加アップロード用） → プレビュー
     //--------------------------------------------------
     if (additionalFileInput) {
       additionalFileInput.addEventListener('change', function(event) {
-        const newFiles = Array.from(event.target.files);
-        let imageCount = selectedAdditionalFiles.filter(f => f.type.startsWith('image/')).length;
-        let videoCount = selectedAdditionalFiles.filter(f => f.type.startsWith('video/')).length;
-        const MAX_IMAGES = 5;
-        const MAX_VIDEOS = 2;
-        const canAdd = [];
+        const newFiles     = Array.from(event.target.files);
+        let imageCount     = selectedAdditionalFiles.filter(f => f.type.startsWith('image/')).length;
+        let videoCount     = selectedAdditionalFiles.filter(f => f.type.startsWith('video/')).length;
+        const MAX_IMAGES   = 5;
+        const MAX_VIDEOS   = 2;
+        const canAdd       = [];
 
         for (const file of newFiles) {
           if (file.type.startsWith('image/')) {
@@ -501,7 +507,7 @@
     }
 
     //--------------------------------------------------
-    // 9) ファイルプレビュー（追加用）
+    // 9) ファイルプレビュー表示（追加用）
     //--------------------------------------------------
     function updateAdditionalPreview() {
       if (!additionalFilePreview) return;
@@ -528,18 +534,18 @@
     }
 
     //--------------------------------------------------
-    // 10) メインフォーム送信処理
+    // 10) メインフォーム送信時の処理
     //--------------------------------------------------
     repairForm.addEventListener('submit', async function(event) {
       event.preventDefault();
 
-      // (1) エラー表示クリア
+      // (1) 前回のバリデーションエラー表示をクリア
       this.querySelectorAll('.error-message-text').forEach(el => el.remove());
       this.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
 
       // (2) 必須項目チェック
-      let formValid = true;
-      let firstInvalid = null;
+      let formValid     = true;
+      let firstInvalid  = null;
       const requiredFields = this.querySelectorAll('[required]');
       requiredFields.forEach(field => {
         if (!field.value.trim()) {
@@ -560,27 +566,27 @@
         return;
       }
 
-      // (3) ローディング表示
+      // (3) 送信開始 → ローディングオーバーレイを表示
       loadingOverlay.classList.remove('hidden');
 
       try {
-        // (4) フォーム値取得
-        const storeName      = document.getElementById('storeName').value.trim();
-        const contactName    = document.getElementById('contactName').value.trim();
-        const phoneNumber    = document.getElementById('phoneNumber').value.trim();
-        const address        = document.getElementById('address').value.trim();
-        const machineTypeVal = machineTypeSelect.value;
-        const machineTypeText = machineTypeSelect.options[machineTypeSelect.selectedIndex].text;
-        const modelText      = modelNumberSelect.options[modelNumberSelect.selectedIndex]
-                                  ? modelNumberSelect.options[modelNumberSelect.selectedIndex].text
-                                  : "";
-        const symptomEls     = document.querySelectorAll('input[name="symptoms"]:checked');
-        const symptomTexts   = Array.from(symptomEls).map(el => el.parentNode.textContent.trim());
+        // (4) フォーム入力値を取得
+        const storeName          = document.getElementById('storeName').value.trim();
+        const contactName        = document.getElementById('contactName').value.trim();
+        const phoneNumber        = document.getElementById('phoneNumber').value.trim();
+        const address            = document.getElementById('address').value.trim();
+        const machineTypeVal     = machineTypeSelect.value;
+        const machineTypeText    = machineTypeSelect.options[machineTypeSelect.selectedIndex].text;
+        const modelText          = modelNumberSelect.options[modelNumberSelect.selectedIndex]
+                                    ? modelNumberSelect.options[modelNumberSelect.selectedIndex].text
+                                    : "";
+        const symptomEls         = document.querySelectorAll('input[name="symptoms"]:checked');
+        const symptomTexts       = Array.from(symptomEls).map(el => el.parentNode.textContent.trim());
         const detailedDescription = document.getElementById('detailedDescription').value.trim();
-        const userIdValue    = document.getElementById('userId').value;
-        const displayNameValue = document.getElementById('displayName').value;
+        const userIdValue        = document.getElementById('userId').value;
+        const displayNameValue   = document.getElementById('displayName').value;
 
-        // (5) ファイル→base64 変換
+        // (5) ファイル選択があれば base64 文字列に変換
         let filesData = [];
         if (selectedFiles.length > 0) {
           const dataURLs = await Promise.all(selectedFiles.map(file => {
@@ -600,7 +606,7 @@
           });
         }
 
-        // (6) GAS に渡すペイロードを生成
+        // (6) GAS に送る payload を準備
         const payload = {
           userId,
           displayName,
@@ -615,8 +621,10 @@
           files: filesData
         };
 
-        // (7) GAS 実行 URL に fetch で送信 (Content-Type: text/plain で単純リクエスト)
-        const scriptURL = "https://script.google.com/macros/s/AKfycbx42hGVxj-tixxC9ZCvlu3GyTzMgRMml5BiTTJmoWxkyQQivaeonW-4gBhPrypUr43E/exec";
+        // (7) 実際に GAS の /exec URL に fetch で POST
+        //     → "Content-Type":"text/plain" にしてプリフライトを回避
+        //     ※以下を必ず「あなたがデプロイした /exec URL」に置き換えてください
+        const scriptURL = "https://script.google.com/macros/s/AKfycbw49sjtPb2JII-crQWEcPkEaAbA4xesoNU2DX0C6QW-XVgyWwIhoWClg0EMVbwzVTop/exec";
 
         const response = await fetch(scriptURL, {
           method: "POST",
@@ -625,18 +633,18 @@
           mode: "cors"
         });
 
-        // (8) HTTPステータスチェック
+        // (8) HTTP ステータス確認
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);
         }
 
-        // (9) JSON レスポンス取得
+        // (9) JSON を受け取る
         const result = await response.json();
         if (result.status !== "success") {
           throw new Error(result.message || "送信中にエラーが発生しました");
         }
 
-        // (10) 成功 → プレビュークリア・完了画面表示
+        // (10) 成功したら、プレビューをクリアし、完了画面を表示
         selectedFiles = [];
         updateFilePreview();
         loadingOverlay.classList.add("hidden");
@@ -651,7 +659,7 @@
     });
 
     //--------------------------------------------------
-    // 11) 完了画面→追加アップロード画面へ切り替え
+    // 11) 完了画面 → 追加アップロード画面へ切り替え
     //--------------------------------------------------
     if (addMoreBtn) {
       addMoreBtn.addEventListener("click", () => {
@@ -672,9 +680,9 @@
         }
         loadingOverlay.classList.remove("hidden");
         try {
-          const userIdValue = document.getElementById("userIdAdditional").value;
+          const userIdValue      = document.getElementById("userIdAdditional").value;
           const displayNameValue = document.getElementById("displayNameAdditional").value;
-          // 追加ファイルを base64 変換
+          // 追加ファイルを base64 に変換
           const dataURLs = await Promise.all(selectedAdditionalFiles.map(file => {
             return new Promise(resolve => {
               const reader = new FileReader();
@@ -690,14 +698,18 @@
               data: base64
             };
           });
-          // 追加用ペイロード
+
+          // 追加用 payload
           const payload = {
             userId: userIdValue,
             displayName: displayNameValue,
             files: filesData,
             isAdditional: true
           };
-          const scriptURL = "https://script.google.com/macros/s/AKfycbx42hGVxj-tixxC9ZCvlu3GyTzMgRMml5BiTTJmoWxkyQQivaeonW-4gBhPrypUr43E/exec";
+
+          // GAS の /exec URL（本番用）に変え忘れないように注意
+          const scriptURL = "https://script.google.com/macros/s/AKfycbw49sjtPb2JII-crQWEcPkEaAbA4xesoNU2DX0C6QW-XVgyWwIhoWClg0EMVbwzVTop/exec";
+
           const response = await fetch(scriptURL, {
             method: "POST",
             headers: { "Content-Type": "text/plain" },
@@ -709,6 +721,8 @@
           if (result.status !== "success") {
             throw new Error(result.message || "追加送信中にエラーが発生しました");
           }
+
+          // 追加送信成功
           loadingOverlay.classList.add("hidden");
           alert("追加ファイルを送信しました。");
           selectedAdditionalFiles = [];
@@ -723,10 +737,11 @@
     }
 
     //--------------------------------------------------
-    // 13) 「LINE に戻る」ボタン → liff.closeWindow()
+    // 13) 「LINEに戻る」ボタン → liff.closeWindow()
     //--------------------------------------------------
     if (closeLiffBtn) {
       closeLiffBtn.addEventListener("click", () => {
+        // liff が読み込まれていれば closeWindow()、そうでなければ何もしない
         if (typeof liff !== "undefined" && liff.closeWindow) {
           liff.closeWindow();
         }
