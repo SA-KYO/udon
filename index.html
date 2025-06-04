@@ -5,13 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>修理依頼フォーム</title>
 
-  <!-- Tailwind CSS CDN（開発用。プロダクションでは PostCSS 等でビルドを推奨） -->
+  <!-- Tailwind CSS CDN（開発用） -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- LIFF SDK を必ず先に読み込む -->
+  <!-- LIFF SDK は必ず先に読み込む -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    /* 必須マークを薄いグレーにしたりなど、独自スタイルがあればここで定義 */
     .required-mark::after {
       content: " *";
       color: #6B7280; /* Tailwind gray-500 */
@@ -20,7 +19,6 @@
 </head>
 <body class="bg-gray-100">
   <div class="container mx-auto max-w-2xl p-4 sm:p-6 lg:p-8">
-
     <!-- ヘッダー -->
     <header class="mb-6 text-center">
       <h1 class="text-2xl sm:text-3xl font-bold text-gray-700">修理依頼フォーム</h1>
@@ -133,7 +131,7 @@
       </div>
     </form>
 
-    <!-- 送信完了画面（はじめは非表示） -->
+    <!-- 送信完了画面（非表示） -->
     <div id="completionScreen" class="hidden text-center bg-gray-50 p-6 rounded-lg shadow-sm">
       <p class="text-lg font-medium mb-4 text-gray-700">送信が完了しました。</p>
       <p class="mb-6 text-gray-600">ご協力ありがとうございました。</p>
@@ -149,7 +147,7 @@
       </button>
     </div>
 
-    <!-- 追加アップロードフォーム（はじめは非表示） -->
+    <!-- 追加アップロードフォーム（非表示） -->
     <form id="additionalForm" class="space-y-6 hidden bg-gray-50 p-6 rounded-lg shadow-sm">
       <h2 class="text-lg font-medium text-gray-700">追加の写真・動画アップロード</h2>
       <p class="text-gray-600">追加で送信する写真・動画を選択してください。</p>
@@ -182,7 +180,6 @@
         </button>
       </div>
     </form>
-
   </div><!-- /.container -->
 
   <!-- ローディングオーバーレイ -->
@@ -192,7 +189,7 @@
     <span class="text-white text-lg">送信中...</span>
   </div>
 
-  <!-- JavaScript（必ず </body> 直前に置く） -->
+  <!-- JavaScript（必ず </body> の直前に置く） -->
   <script>
     /***************************************************************
      * 1) LIFF SDK 初期化 / ユーザープロフィール取得
@@ -208,7 +205,6 @@
         })
         .then(profile => {
           if (profile) {
-            // userId / displayName を hidden に格納
             document.getElementById('userId').value = profile.userId;
             document.getElementById('displayName').value = profile.displayName || '';
             document.getElementById('userIdAdditional').value = profile.userId;
@@ -222,7 +218,7 @@
     }
 
     /***************************************************************
-     * 2) 型番・故障内容データ定義
+     * 2) 型番 & 故障内容 のデータ定義
      ***************************************************************/
     const modelData = {
       seimenki: [
@@ -271,7 +267,7 @@
             { id: 'seimenki_belt_issue', text: 'ベルトコンベアが動かない、または片寄る' }
         ]},
         { category: '音に関する問題', symptoms: [
-            { id: 'seimenki_noise', text: '異音がする（動画での報告を推奨します）' }
+            { id: 'seimenki_noise', text: '異音がする（動画での報告推奨）' }
         ]},
         { category: 'その他', symptoms: [
             { id: 'seimenki_other_symptom', text: '上記以外の症状がある' }
@@ -286,7 +282,7 @@
             { id: 'presski_roll_stop', text: 'ロール（ローラー）が回転しない、または途中で止まる' }
         ]},
         { category: '音に関する問題', symptoms: [
-            { id: 'presski_noise', text: '異音がする（動画での報告を推奨します）' }
+            { id: 'presski_noise', text: '異音がする（動画での報告推奨）' }
         ]},
         { category: 'その他', symptoms: [
             { id: 'presski_other_symptom', text: '上記以外の症状がある' }
@@ -343,19 +339,19 @@
     let selectedAdditionalFiles = [];
 
     //--------------------------------------------------
-    // 5) 機器種類セレクト → 型番 ＆ 故障内容 再生成
+    // 5) 機器種類セレクト → 型番 & 故障内容 再生成
     //--------------------------------------------------
     if (machineTypeSelect) {
       machineTypeSelect.addEventListener('change', function() {
         const selectedMachine = this.value; // ex. "seimenki"
 
-        // --- 型番セレクトをリセット ---
+        // 型番セレクトをリセット
         modelNumberSelect.innerHTML = '<option value="">機器の種類を選択してください</option>';
         if (selectedMachine && modelData[selectedMachine]) {
           modelData[selectedMachine].forEach(model => {
             const opt = document.createElement('option');
-            opt.value = model.value;    // ex. "m305p"
-            opt.textContent = model.text; // ex. "M305-P"
+            opt.value = model.value;
+            opt.textContent = model.text;
             opt.className = 'text-gray-900';
             modelNumberSelect.appendChild(opt);
           });
@@ -367,7 +363,7 @@
           modelNumberSelect.appendChild(opt);
         }
 
-        // --- 故障内容チェックボックスをリセット ---
+        // 故障内容チェックボックスをリセット
         troubleSymptomsDiv.innerHTML = '';
         if (selectedMachine && troubleData[selectedMachine]) {
           troubleData[selectedMachine].forEach(categoryItem => {
@@ -375,7 +371,6 @@
             h3.className = 'font-semibold text-gray-700 mt-3 mb-1';
             h3.textContent = categoryItem.category;
             troubleSymptomsDiv.appendChild(h3);
-
             categoryItem.symptoms.forEach(symptom => {
               const label = document.createElement('label');
               label.className = 'checkbox-label text-sm text-gray-700';
@@ -411,7 +406,6 @@
         const MAX_IMAGES = 5;
         const MAX_VIDEOS = 2;
         const canAdd = [];
-
         for (const file of newFiles) {
           if (file.type.startsWith('image/')) {
             if (imageCount < MAX_IMAGES) {
@@ -475,7 +469,6 @@
         const MAX_IMAGES = 5;
         const MAX_VIDEOS = 2;
         const canAdd = [];
-
         for (const file of newFiles) {
           if (file.type.startsWith('image/')) {
             if (imageCount < MAX_IMAGES) {
@@ -529,16 +522,16 @@
     }
 
     //--------------------------------------------------
-    // 10) メインフォーム送信
+    // 10) メインフォーム送信処理
     //--------------------------------------------------
     repairForm.addEventListener('submit', async function(event) {
       event.preventDefault();
 
-      // (1) エラー表示をクリア
+      // (1) エラーメッセージをクリア
       this.querySelectorAll('.error-message-text').forEach(el => el.remove());
       this.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
 
-      // (2) 必須項目チェック
+      // (2) 必須チェック
       let formValid = true;
       let firstInvalid = null;
       const requiredFields = this.querySelectorAll('[required]');
@@ -581,7 +574,7 @@
         const userIdValue         = document.getElementById('userId').value;
         const displayNameValue    = document.getElementById('displayName').value;
 
-        // (5) 選択されたファイルを base64 データに変換
+        // (5) 選択されたファイルを base64 に変換
         let filesData = [];
         if (selectedFiles.length > 0) {
           const dataURLs = await Promise.all(selectedFiles.map(file => {
@@ -617,8 +610,8 @@
         };
 
         // (7) fetch で Apps Script の /exec URL に POST
-        //     → 必ずご自身の exec URL に置き換えてください
-        const scriptURL = "https://script.google.com/macros/s/AKfycbx9AG0JhkV_6KGnU0tViE6Y6_z1VT9-2X5ruUMjwH-eCtOvb1qRu95zIq6rxDfjxVs/exec";
+        //     ※ 必ずデプロイした最新の /exec URL に書き換えてください
+        const scriptURL = "https://script.google.com/macros/s/AKfycbxBj9VCchlfYFXvc5ojOyXVRVjQD3AekWK08qVGyXLkYPDoxJPmcPliEPEAD61pGHfR/exec";
 
         const response = await fetch(scriptURL, {
           method: "POST",
@@ -638,7 +631,7 @@
           throw new Error(result.message || "送信中にエラーが発生しました");
         }
 
-        // (10) 成功時に「送信完了画面」を表示
+        // (10) 成功時：送信完了画面を表示
         selectedFiles = [];
         updateFilePreview();
         loadingOverlay.classList.add("hidden");
@@ -646,7 +639,7 @@
         completionScreen.classList.remove("hidden");
       }
       catch (err) {
-        console.error("Main form submission error:", err);
+        console.error("▶▶ Main form submission error:", err);
         loadingOverlay.classList.add("hidden");
         alert("送信に失敗しました。お手数ですが再度お試しください。\n" + err.message);
       }
@@ -703,7 +696,7 @@
           };
 
           // GAS の /exec URL（必ず本番用に置き換える）
-          const scriptURL = "https://script.google.com/macros/s/AKfycbx9AG0JhkV_6KGnU0tViE6Y6_z1VT9-2X5ruUMjwH-eCtOvb1qRu95zIq6rxDfjxVs/exec";
+          const scriptURL = "https://script.google.com/macros/s/AKfycbxBj9VCchlfYFXvc5ojOyXVRVjQD3AekWK08qVGyXLkYPDoxJPmcPliEPEAD61pGHfR/exec";
 
           const response = await fetch(scriptURL, {
             method: "POST",
@@ -724,7 +717,7 @@
           updateAdditionalPreview();
         }
         catch (err) {
-          console.error("Additional upload error:", err);
+          console.error("▶▶ Additional upload error:", err);
           loadingOverlay.classList.add("hidden");
           alert("追加送信に失敗しました。もう一度お試しください。\n" + err.message);
         }
