@@ -25,8 +25,9 @@
     </header>
 
     <!-- メインフォーム -->
-    <form id="repairForm" class="space-y-6 bg-gray-50 p-6 rounded-lg shadow-sm">
-
+    <form id="repairForm" class="space-y-6 bg-gray-50 p-6 rounded-lg shadow-sm opacity-50 pointer-events-none">
+      <!-- 最初は LIFF の初期化が終わるまで半透明＆入力不可にしておく -->
+      
       <!-- お客様情報 -->
       <div class="form-section">
         <label for="storeName" class="block text-sm font-medium text-gray-700 required-mark">店舗名</label>
@@ -189,11 +190,16 @@
     <span class="text-white text-lg">送信中...</span>
   </div>
 
-  <!-- JavaScript（必ず </body> の直前に置く） -->
   <script>
     /***************************************************************
-     * 1) LIFF SDK 初期化 / ユーザープロフィール取得
+     * 1) LIFF SDK 初期化 / プロフィール取得を完了してからフォーム入力可能にする
      ***************************************************************/
+    let liffReady = false; // LIFF SDK & プロフィール取得が終わったかどうかを示すフラグ
+
+    // フォームを半透明＆無効にしておき、
+    // プロフィール取得が済んだら通常状態に戻す
+    const repairForm = document.getElementById("repairForm");
+
     try {
       liff.init({ liffId: '2007442822-Nal0O7lP' })
         .then(() => {
@@ -205,16 +211,26 @@
         })
         .then(profile => {
           if (profile) {
-            document.getElementById('userId').value = profile.userId;
-            document.getElementById('displayName').value = profile.displayName || '';
-            document.getElementById('userIdAdditional').value = profile.userId;
-            document.getElementById('displayNameAdditional').value = profile.displayName || '';
+            document.getElementById("userId").value = profile.userId;
+            document.getElementById("displayName").value = profile.displayName || "";
+            document.getElementById("userIdAdditional").value = profile.userId;
+            document.getElementById("displayNameAdditional").value = profile.displayName || "";
             console.log("LIFF で取得した userId:", profile.userId);
           }
         })
-        .catch(err => console.error('LIFF init error:', err));
-    } catch(e) {
-      console.warn('LIFF SDK が読み込まれていません:', e);
+        .catch(err => console.error("LIFF init error:", err))
+        .finally(() => {
+          // ここでフォームを通常状態に戻す
+          liffReady = true;
+          repairForm.style.opacity = "1";
+          repairForm.style.pointerEvents = "auto";
+        });
+    } catch (e) {
+      console.warn("LIFF SDK が読み込まれていません:", e);
+      // LIFF が読み込まれていない場合でも、フォームは使えるようにしておく
+      liffReady = true;
+      repairForm.style.opacity = "1";
+      repairForm.style.pointerEvents = "auto";
     }
 
     /***************************************************************
@@ -323,14 +339,13 @@
     const additionalFileInput   = document.getElementById('additionalFile');
     const additionalFilePreview = document.getElementById('additionalFilePreview');
 
-    const repairForm       = document.getElementById('repairForm');
-    const loadingOverlay   = document.getElementById('loadingOverlay');
-    const completionScreen = document.getElementById('completionScreen');
-
-    const addMoreBtn       = document.getElementById('addMoreBtn');
-    const additionalForm   = document.getElementById('additionalForm');
-    const closeLiffBtn     = document.getElementById('closeLiffBtn');
-    const closeLiffBtn2    = document.getElementById('closeLiffBtn2');
+    const repairFormScope    = document.getElementById('repairForm');
+    const completionScreen   = document.getElementById('completionScreen');
+    const addMoreBtn         = document.getElementById('addMoreBtn');
+    const additionalForm     = document.getElementById('additionalForm');
+    const closeLiffBtn       = document.getElementById('closeLiffBtn');
+    const closeLiffBtn2      = document.getElementById('closeLiffBtn2');
+    const loadingOverlay     = document.getElementById('loadingOverlay');
 
     //--------------------------------------------------
     // 4) ファイルプレビュー用配列（メイン・追加）
@@ -524,8 +539,14 @@
     //--------------------------------------------------
     // 10) メインフォーム送信処理
     //--------------------------------------------------
-    repairForm.addEventListener('submit', async function(event) {
+    repairFormScope.addEventListener('submit', async function(event) {
       event.preventDefault();
+
+      // LIFF 初期化／プロフィール取得が完了するまでは送信させない
+      if (!liffReady) {
+        alert("LINE プロフィール取得待機中です。少しお待ちください。");
+        return;
+      }
 
       // (1) エラーメッセージをクリア
       this.querySelectorAll('.error-message-text').forEach(el => el.remove());
@@ -611,7 +632,7 @@
 
         // (7) fetch で Apps Script の /exec URL に POST
         //     ※ 必ずデプロイした最新の /exec URL に書き換えてください
-        const scriptURL = "https://script.google.com/macros/s/AKfycbxBj9VCchlfYFXvc5ojOyXVRVjQD3AekWK08qVGyXLkYPDoxJPmcPliEPEAD61pGHfR/exec";
+        const scriptURL = "https://script.google.com/macros/s/AKfycbx8VDy1DvjsPsBsD_VgcsbTocAoq4kXOu65aGTxBAyt_d5j2ZZ2xV3IvWqbrsykiwsn/exec";
 
         const response = await fetch(scriptURL, {
           method: "POST",
@@ -635,7 +656,7 @@
         selectedFiles = [];
         updateFilePreview();
         loadingOverlay.classList.add("hidden");
-        repairForm.classList.add("hidden");
+        repairFormScope.classList.add("hidden");
         completionScreen.classList.remove("hidden");
       }
       catch (err) {
@@ -696,7 +717,7 @@
           };
 
           // GAS の /exec URL（必ず本番用に置き換える）
-          const scriptURL = "https://script.google.com/macros/s/AKfycbxBj9VCchlfYFXvc5ojOyXVRVjQD3AekWK08qVGyXLkYPDoxJPmcPliEPEAD61pGHfR/exec";
+          const scriptURL = "https://script.google.com/macros/s/AKfycbx8VDy1DvjsPsBsD_VgcsbTocAoq4kXOu65aGTxBAyt_d5j2ZZ2xV3IvWqbrsykiwsn/exec";
 
           const response = await fetch(scriptURL, {
             method: "POST",
