@@ -1,30 +1,84 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GAS 呼び出し CORS テスト</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      background-color: #f3f4f6;
+    }
+    button {
+      padding: 0.6rem 1.2rem;
+      background-color: #4b5563; /* gray-700 */
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color .2s;
+    }
+    button:hover {
+      background-color: #374151; /* gray-800 */
+    }
+    pre {
+      margin-top: 1rem;
+      background-color: #e5e7eb; /* gray-200 */
+      padding: 1rem;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
 <body>
-<script>
-const scriptUrl = 'https://script.google.com/macros/s/AKfycbyJMw8yLjnfWktsqI0MM24ulHwEiy3vtlbiK98DAYhy_8wnJeoIFJv_3l3Kytl7JyuY/exec';
 
-// 送信するデータ（JSON）
-const payload = { name: "太郎", action: "test" };
+  <h1>GAS CORS テスト</h1>
+  <p>下の「送信ボタン」を押すと、GAS の doPost(e) を呼び出します。</p>
+  <!-- これがないと何も飛びません。必ず追加すること！ -->
+  <button id="sendBtn">GAS にテスト送信</button>
+  <pre id="log"></pre>
 
-// fetch 例：Content-Type を text/plain に設定
-fetch(scriptUrl, {
-  method: 'POST',
-  headers: { 'Content-Type': 'text/plain' },
-  body: JSON.stringify(payload),
-  mode: 'cors'
-})
-.then(response => {
-  if (!response.ok) throw new Error("HTTP status " + response.status);
-  return response.json();
-})
-.then(data => {
-  console.log("サーバーからの応答:", data);
-})
-.catch(err => {
-  console.error("Fetch エラー:", err);
-});
-</script>
+  <script>
+    const sendBtn = document.getElementById("sendBtn");
+    const log = document.getElementById("log");
+
+    // ここを、必ず「あなたの実際にデプロイした exec URL」に置き換え
+    // （例: https://script.google.com/macros/s/AKfycbxyz12345/exec）
+    const GAS_EXEC_URL = "https://script.google.com/macros/s/AKfycbyJMw8yLjnfWktsqI0MM24ulHwEiy3vtlbiK98DAYhy_8wnJeoIFJv_3l3Kytl7JyuY/exec";
+
+    sendBtn.addEventListener("click", async () => {
+      log.textContent = "送信中…";
+
+      try {
+        // 本番では Content-Type: application/json でもよいですが、
+        // CORS のプリフライトを避けるためにここでは text/plain を使っています。
+        const payload = { test: "hello world" };
+
+        const response = await fetch(GAS_EXEC_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(payload),
+          mode: "cors"
+        });
+
+        log.textContent = `fetch status: ${response.status} ${response.statusText}\n`;
+
+        // ステータスが 200 以外はエラー扱い
+        if (!response.ok) {
+          log.textContent += "サーバーエラーが発生しました。\n";
+          return;
+        }
+
+        // JSON をパース
+        const data = await response.json();
+        log.textContent += `戻り値: ${JSON.stringify(data, null, 2)}\n`;
+      }
+      catch (err) {
+        log.textContent = "通信に失敗しました。\n" + err;
+      }
+    });
+  </script>
 </body>
 </html>
