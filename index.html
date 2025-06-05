@@ -11,7 +11,7 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    /* 必須項目の赤いアスタリスクをグレーに変更 */
+    /* 必須項目のアスタリスクをグレーに */
     .required-mark::after {
       content: " *";
       color: #6B7280; /* gray-500 */
@@ -223,7 +223,7 @@
           repairForm.classList.remove('opacity-50', 'pointer-events-none');
         });
     } catch (e) {
-      // LIFF SDK が読み込まれていない or ブラウザなど
+      // LIFF SDK が読み込まれていない or ブラウザなどで例外
       console.warn('LIFF SDK が読み込まれていない可能性があります:', e);
       liffReady = true;
       repairForm.classList.remove('opacity-50', 'pointer-events-none');
@@ -352,7 +352,7 @@
       machineTypeSelect.addEventListener('change', function() {
         const selectedMachine = this.value;
 
-        // 型番セレクトをクリアしてから再生成
+        // 型番セレクトをクリア→再生成
         modelNumberSelect.innerHTML = '<option value="">機器の種類を選択してください</option>';
         if (selectedMachine && modelData[selectedMachine]) {
           modelData[selectedMachine].forEach(obj => {
@@ -370,7 +370,7 @@
           modelNumberSelect.appendChild(opt);
         }
 
-        // 故障内容をクリアして再生成
+        // 故障内容をクリア→再生成
         troubleSymptomsDiv.innerHTML = '';
         if (selectedMachine && troubleData[selectedMachine]) {
           troubleData[selectedMachine].forEach(cat => {
@@ -410,7 +410,8 @@
         const newFiles = Array.from(event.target.files);
         let imageCount = selectedFiles.filter(f => f.type.startsWith('image/')).length;
         let videoCount = selectedFiles.filter(f => f.type.startsWith('video/')).length;
-        const MAX_IMAGES = 5, MAX_VIDEOS = 2;
+        const MAX_IMAGES = 5;
+        const MAX_VIDEOS = 2;
         const canAdd = [];
         for (const f of newFiles) {
           if (f.type.startsWith('image/')) {
@@ -462,7 +463,8 @@
         const newFiles = Array.from(evt.target.files);
         let imageCount = selectedAdditionalFiles.filter(f => f.type.startsWith('image/')).length;
         let videoCount = selectedAdditionalFiles.filter(f => f.type.startsWith('video/')).length;
-        const MAX_IMAGES = 5, MAX_VIDEOS = 2;
+        const MAX_IMAGES = 5;
+        const MAX_VIDEOS = 2;
         const canAdd = [];
         for (const f of newFiles) {
           if (f.type.startsWith('image/')) {
@@ -507,18 +509,18 @@
     }
 
     //--------------------------------------------------
-    // 10) メインフォーム送信処理（“送信失敗”が絶対に表示されないように修正）
+    // 10) メインフォーム送信処理（正常：完了画面へ、異常：アラート「送信に失敗しました」）
     //--------------------------------------------------
-    repairForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
+    repairForm.addEventListener('submit', async function(evt) {
+      evt.preventDefault();
 
-      // 1) LIFF 準備完了チェック
+      // (1) LIFF 準備完了チェック
       if (!liffReady) {
         alert('LINE プロフィール取得中です。しばらくお待ちください。');
         return;
       }
 
-      // 2) 必須チェック
+      // (2) 必須チェック
       this.querySelectorAll('.error-message-text').forEach(el => el.remove());
       this.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
       let formValid = true, firstInvalid = null;
@@ -541,7 +543,7 @@
         return;
       }
 
-      // 3) ローディングオーバーレイを表示
+      // (3) ローディングオーバーレイを表示
       loadingOverlay.classList.remove('hidden');
 
       try {
@@ -555,11 +557,11 @@
         const modelText       = modelNumberSelect.options[modelNumberSelect.selectedIndex]
                                   ? modelNumberSelect.options[modelNumberSelect.selectedIndex].text
                                   : '';
-        const symptomEls = document.querySelectorAll('input[name="symptoms"]:checked');
-        const symptomsArr = Array.from(symptomEls).map(el => el.nextSibling.textContent.trim());
-        const detailed    = document.getElementById('detailedDescription').value.trim();
-        const userId      = document.getElementById('userId').value;
-        const displayName = document.getElementById('displayName').value;
+        const symptomEls   = document.querySelectorAll('input[name="symptoms"]:checked');
+        const symptomsArr  = Array.from(symptomEls).map(el => el.nextSibling.textContent.trim());
+        const detailed     = document.getElementById('detailedDescription').value.trim();
+        const userId       = document.getElementById('userId').value;
+        const displayName  = document.getElementById('displayName').value;
 
         // (B) selectedFiles → Base64 に変換
         let filesData = [];
@@ -596,29 +598,43 @@
           files: filesData
         };
 
-        // (D) GAS Webアプリの /exec URL（必ずご自身のものに変更）
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzBCW47F2Jc30zE9k8ekeWVIDAQcUJryudIGwpj-cDqXVWoG2isal40hZjjqg3ZQpae/exec';
+        // (D) GAS Webアプリの /exec URL（必ずご自身のものに置き換えてください）
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzTckpDmO6LRyTBTZ5jzya0F6vx0wvpgy-mgYKRL8TFk_Q5-mqRVerAE0zoDsqZa425/exec';
 
-        // (E) ヘッダーを一切指定せず、body のみ JSON で送信
-        await fetch(scriptURL, {
+        // (E) fetch で送信
+        const response = await fetch(scriptURL, {
           method: 'POST',
           mode: 'cors',
+          headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify(payload)
         });
-        // ※あえて response.ok はチェックしない or チェックしても無視することで、
-        //   必ず「送信完了画面」を表示する。
-      }
-      catch (err) {
-        // “catch” に入っても何もしない（エラーはログに出すだけ）
-        console.error('メインフォーム送信エラー（無視）:', err);
-      }
-      finally {
-        // どんな場合でも「送信完了画面」を表示する
+
+        // (F) HTTP ステータスが 200 以外ならエラーとみなす
+        if (!response.ok) {
+          throw new Error(`HTTPエラー: ${response.status}`);
+        }
+
+        // (G) レスポンス JSON を受け取り、status フィールドを確認
+        const ret = await response.json();
+        if (ret.status !== 'success') {
+          throw new Error(ret.message || 'サーバーエラー');
+        }
+
+        // ─────── ここまで来ればサーバーは正常に処理完了と判断 ───────
+        // 成功したら完了画面へ切り替え
         selectedFiles = [];
         updateFilePreview();
-        loadingOverlay.classList.add('hidden');
         repairForm.classList.add('hidden');
         completionScreen.classList.remove('hidden');
+      }
+      catch (err) {
+        // エラーが発生したらアラートで表示し、フォームはそのまま残す
+        console.error('メインフォーム送信エラー:', err);
+        alert('送信に失敗しました。\n' + err.message);
+      }
+      finally {
+        // ローディングは必ず隠す
+        loadingOverlay.classList.add('hidden');
       }
     });
 
@@ -633,7 +649,7 @@
     }
 
     //--------------------------------------------------
-    // 12) 追加アップロードフォーム送信（こちらも必ず完了画面を表示）
+    // 12) 追加アップロードフォーム送信処理（同じく正常／異常判定）
     //--------------------------------------------------
     if (additionalForm) {
       additionalForm.addEventListener('submit', async function(evt) {
@@ -642,12 +658,13 @@
           alert('追加で送信するファイルを選択してください。');
           return;
         }
+
         loadingOverlay.classList.remove('hidden');
         try {
           const userId      = document.getElementById('userIdAdditional').value;
           const displayName = document.getElementById('displayNameAdditional').value;
 
-          // 追加ファイルを Base64 に変換
+          // 追加ファイル → Base64 に変換
           const dataURLs = await Promise.all(selectedAdditionalFiles.map(file => {
             return new Promise(resolve => {
               const reader = new FileReader();
@@ -671,24 +688,35 @@
             isAdditional: true
           };
 
-          // 同様にヘッダーを一切指定せず、body のみ JSON で送信
-          const scriptURL = 'https://script.google.com/macros/s/AKfycbzBCW47F2Jc30zE9k8ekeWVIDAQcUJryudIGwpj-cDqXVWoG2isal40hZjjqg3ZQpae/exec';
-          await fetch(scriptURL, {
+          // GAS Webアプリの /exec URL（必ずご自身のものに置き換えてください）
+          const scriptURL = 'https://script.google.com/macros/s/AKfycbzTckpDmO6LRyTBTZ5jzya0F6vx0wvpgy-mgYKRL8TFk_Q5-mqRVerAE0zoDsqZa425/exec';
+
+          const response = await fetch(scriptURL, {
             method: 'POST',
             mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(payload)
           });
-          // ※成功／失敗にかかわらず catch を無視して「追加完了」とみなす
-        }
-        catch (err) {
-          console.error('追加アップロード送信エラー（無視）:', err);
-        }
-        finally {
-          // どんな場合でも「追加送信完了」をアラートして画面をそのままにする
-          loadingOverlay.classList.add('hidden');
+
+          if (!response.ok) {
+            throw new Error(`HTTPエラー: ${response.status}`);
+          }
+          const ret = await response.json();
+          if (ret.status !== 'success') {
+            throw new Error(ret.message || 'サーバーエラー');
+          }
+
+          // 成功 → アラートで通知し、プレビューフィールドをクリア
           alert('追加ファイルを送信しました。');
           selectedAdditionalFiles = [];
           updateAdditionalPreview();
+        }
+        catch (err) {
+          console.error('追加アップロード送信エラー:', err);
+          alert('追加送信に失敗しました。\n' + err.message);
+        }
+        finally {
+          loadingOverlay.classList.add('hidden');
         }
       });
     }
