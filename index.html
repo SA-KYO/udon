@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>修理依頼フォーム</title>
 
-  <!-- Tailwind CSS CDN（開発時の簡易利用。プロダクションでは PostCSS 導入推奨） -->
+  <!-- Tailwind CSS CDN（開発・テスト用途） -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- LIFF SDK は必ず最初に読み込む -->
+  <!-- LIFF SDK はかならず最初に読み込む -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    /* 赤いアスタリスク表示は不要なので灰色に変更 */
+    /* 赤いアスタリスク表示を灰色に */
     .required-mark::after {
       content: " *";
       color: #6B7280; /* gray-500 */
@@ -20,6 +20,7 @@
   </style>
 </head>
 <body class="bg-gray-100">
+
   <div class="container mx-auto max-w-2xl p-4 sm:p-6 lg:p-8">
     <!-- ヘッダー -->
     <header class="mb-6 text-center">
@@ -194,46 +195,56 @@
 
   <script>
     //--------------------------------------------------
+    // 0) スクリプトが読み込まれた時点でログを出す
+    //--------------------------------------------------
+    console.log("▶▶ 修理依頼フォームのスクリプトが読み込まれました");
+
+    //--------------------------------------------------
     // 1) LIFF 初期化 / プロフィール取得 を完了してから フォームを有効化
     //--------------------------------------------------
     let liffReady = false; // LIFF 初期化＆プロフィール取得フラグ
+    const repairFormScope = document.getElementById("repairForm");
 
-    // 「repairForm」は最初 CSS で半透明&入力不可にしてある
-    const repairForm = document.getElementById("repairForm");
-
-    try {                  
-      liff.init({ liffId: '2007442822-Nal0O7lP' })         // ← LIFF ID を自分のものに書き換える
+    try {
+      console.log("▶▶ liff.init を呼び出します...");
+      // ※ 必ずプレフィックス「liff-」を外して、LINE Developers から取得した ID のみを指定してください
+      liff.init({ liffId: '2007442822-Nal0O7lP' })
         .then(() => {
+          console.log("▶▶ liff.init 成功");
+          // LINE アプリ内ブラウザで開かれていない場合、isLoggedIn() が false になるのでログインを呼び出す
           if (!liff.isLoggedIn()) {
+            console.log("▶▶ LIFF 未ログインのため liff.login() を呼び出します");
             return liff.login();
           }
+          // ログイン済みなら次へ
+          return;
         })
         .then(() => {
+          console.log("▶▶ liff.getProfile() を呼び出します");
           return liff.getProfile();
         })
         .then(profile => {
+          console.log("▶▶ getProfile の結果:", profile);
           if (profile) {
-            // Hidden フィールドに userId, displayName をセット
             document.getElementById("userId").value = profile.userId;
             document.getElementById("displayName").value = profile.displayName || "";
             document.getElementById("userIdAdditional").value = profile.userId;
             document.getElementById("displayNameAdditional").value = profile.displayName || "";
-            console.log("LIFF で取得した userId:", profile.userId);
+            console.log("▶▶ Hidden フィールドに userId をセット:", profile.userId);
           }
         })
         .catch(err => {
-          console.error("LIFF init/getProfile error:", err);
+          console.error("▶▶ LIFF init/getProfile error:", err);
         })
         .finally(() => {
-          // LIFF 初期化完了：フォームを通常表示（半透明、入力不可を解除）
+          console.log("▶▶ LIFF 初期化完了 or 何らかの例外後でもフォームを有効化します");
           liffReady = true;
-          repairForm.classList.remove("opacity-50", "pointer-events-none");
+          repairFormScope.classList.remove("opacity-50", "pointer-events-none");
         });
     } catch (e) {
-      // LIFF SDK が読み込まれていない場合でも必ずフォームを使えるようにする
-      console.warn("LIFF SDK が読み込まれていない可能性があります:", e);
+      console.warn("▶▶ LIFF SDK が読み込まれていない、もしくは別の例外が発生:", e);
       liffReady = true;
-      repairForm.classList.remove("opacity-50", "pointer-events-none");
+      repairFormScope.classList.remove("opacity-50", "pointer-events-none");
     }
 
     //--------------------------------------------------
@@ -599,6 +610,15 @@
         const userIdValue         = document.getElementById('userId').value;
         const displayNameValue    = document.getElementById('displayName').value;
 
+        console.log("▶▶ 送信前データ:", {
+          userId: userIdValue,
+          displayName: displayNameValue,
+          storeName, contactName, phoneNumber, address,
+          equipmentType: machineTypeText, modelNumber: modelText,
+          symptoms: symptomTexts, detailedDescription,
+          files: selectedFiles.map(f => f.name)
+        });
+
         // (5) selectedFiles を base64 に変換
         let filesData = [];
         if (selectedFiles.length > 0) {
@@ -621,8 +641,8 @@
 
         // (6) GAS に渡す payload オブジェクト
         const payload = {
-          userId,
-          displayName,
+          userId: userIdValue,
+          displayName: displayNameValue,
           storeName,
           contactName,
           phoneNumber,
@@ -635,16 +655,18 @@
         };
 
         // (7) fetch で GAS の /exec URL に POST
-        // ← ここを必ず「GAS Web アプリの URL（/exec）」に書き換える
-        const scriptURL = "https://script.google.com/macros/s/AKfycbxUFezIWjKZLqcu2Iyy8TABE_nIUpJ07DSvvscmhMUGHDuEf5xtw04vqwWUw4Y3uDva/exec";
+        // ← 必ず「ご自身の Web アプリ URL」に置き換えること
+        const scriptURL = "https://script.google.com/macros/s/AKfycbzyX2lPsQJylneuLOmVAXtiOWA-mmg1VMaOXDf_pSsTMBpRIyDHvLNABimlwVfMUtE/exec";
 
+        console.log("▶▶ fetch で GAS に送信:", scriptURL);
         const response = await fetch(scriptURL, {
           method: "POST",
-          headers: { "Content-Type": "text/plain" },
+          headers: { "Content-Type": "text/plain" },  // ここは text/plain のままで OK
           body: JSON.stringify(payload),
           mode: "cors"
         });
 
+        console.log("▶▶ fetch の結果:", response.status, response.statusText);
         // (8) HTTP OK チェック
         if (!response.ok) {
           throw new Error(`HTTP エラー: ${response.status}`);
@@ -652,6 +674,7 @@
 
         // (9) レスポンス JSON を受け取る
         const result = await response.json();
+        console.log("▶▶ GAS doPost の返却:", result);
         if (result.status !== "success") {
           throw new Error(result.message || "送信中にエラーが発生しました");
         }
@@ -695,6 +718,12 @@
           const userIdValue      = document.getElementById("userIdAdditional").value;
           const displayNameValue = document.getElementById("displayNameAdditional").value;
 
+          console.log("▶▶ 追加送信前データ:", {
+            userId: userIdValue,
+            displayName: displayNameValue,
+            files: selectedAdditionalFiles.map(f => f.name)
+          });
+
           // 選択されたファイルを base64 に変換
           const dataURLs = await Promise.all(selectedAdditionalFiles.map(file => {
             return new Promise(resolve => {
@@ -719,17 +748,20 @@
             isAdditional: true
           };
 
-          // GAS の /exec URL を同様に書き換える
-          const scriptURL = "https://script.google.com/macros/s/AKfycbxUFezIWjKZLqcu2Iyy8TABE_nIUpJ07DSvvscmhMUGHDuEf5xtw04vqwWUw4Y3uDva/exec";
+          // ← 必ず「ご自身の Web アプリ /exec URL」に置き換えること
+          const scriptURL = "https://script.google.com/macros/s/AKfycbzyX2lPsQJylneuLOmVAXtiOWA-mmg1VMaOXDf_pSsTMBpRIyDHvLNABimlwVfMUtE/exec";
 
+          console.log("▶▶ 追加 fetch で GAS に送信:", scriptURL);
           const response = await fetch(scriptURL, {
             method: "POST",
             headers: { "Content-Type": "text/plain" },
             body: JSON.stringify(payload),
             mode: "cors"
           });
+          console.log("▶▶ 追加 fetch の結果:", response.status, response.statusText);
           if (!response.ok) throw new Error(`HTTP エラー: ${response.status}`);
           const result = await response.json();
+          console.log("▶▶ 追加送信後の返却:", result);
           if (result.status !== "success") {
             throw new Error(result.message || "追加送信中にエラーが発生しました");
           }
@@ -754,6 +786,7 @@
     if (closeLiffBtn) {
       closeLiffBtn.addEventListener("click", () => {
         if (typeof liff !== "undefined" && liff.closeWindow) {
+          console.log("▶▶ closeWindow を呼び出します");
           liff.closeWindow();
         }
       });
@@ -761,6 +794,7 @@
     if (closeLiffBtn2) {
       closeLiffBtn2.addEventListener("click", () => {
         if (typeof liff !== "undefined" && liff.closeWindow) {
+          console.log("▶▶ closeWindow(追加) を呼び出します");
           liff.closeWindow();
         }
       });
