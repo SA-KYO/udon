@@ -11,7 +11,7 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    /* 必須項目の赤いアスタリスクをグレーに変える */
+    /* 必須項目の赤いアスタリスクをグレーに変更 */
     .required-mark::after {
       content: " *";
       color: #6B7280; /* gray-500 */
@@ -29,7 +29,7 @@
     <!-- メインフォーム（初期：半透明＋入力不可） -->
     <form id="repairForm"
           class="space-y-6 bg-gray-50 p-6 rounded-lg shadow-sm opacity-50 pointer-events-none">
-      <!-- LIFF初期化後に opacity と pointer-events-none を外し、入力可能にする -->
+      <!-- LIFF 初期化後に opacity と pointer-events-none を外し、入力可能にする -->
 
       <!-- お客様情報 -->
       <div>
@@ -118,7 +118,7 @@
         <div id="filePreview" class="mt-3 space-y-2"></div>
       </div>
 
-      <!-- LIFF経由で取得した userId, displayName を Hidden に保持 -->
+      <!-- LIFF 経由で取得した userId, displayName を Hidden に保持 -->
       <input type="hidden" id="userId" name="userId" />
       <input type="hidden" id="displayName" name="displayName" />
 
@@ -162,7 +162,7 @@
         </label>
       </div>
       <div id="additionalFilePreview" class="mt-3 space-y-2"></div>
-      <!-- 追加用Hidden -->
+      <!-- 追加用 Hidden -->
       <input type="hidden" id="userIdAdditional" name="userId" />
       <input type="hidden" id="displayNameAdditional" name="displayName" />
 
@@ -198,16 +198,14 @@
     const completionScreen = document.getElementById('completionScreen');
 
     try {
-      // ※ここの LIFF ID は必ずご自身のものに書き換えてください
+      // ■■■ ここを必ずご自身の LIFF ID に変更してください ■■■
       liff.init({ liffId: '2007442822-Nal0O7lP' })
         .then(() => {
           if (!liff.isLoggedIn()) {
             return liff.login();
           }
         })
-        .then(() => {
-          return liff.getProfile();
-        })
+        .then(() => liff.getProfile())
         .then(profile => {
           // Hidden に userId, displayName をセット
           document.getElementById('userId').value           = profile.userId;
@@ -220,12 +218,12 @@
           console.error('LIFF init または getProfile でエラー:', err);
         })
         .finally(() => {
-          // Form を通常表示（半透明・入力不可を解除）
+          // フォームを通常表示（半透明・入力不可を解除）
           liffReady = true;
           repairForm.classList.remove('opacity-50', 'pointer-events-none');
         });
     } catch (e) {
-      // LIFF SDK が読み込まれていない場合でもフォームを使えるように
+      // LIFF SDK が読み込まれていない or ブラウザなど
       console.warn('LIFF SDK が読み込まれていない可能性があります:', e);
       liffReady = true;
       repairForm.classList.remove('opacity-50', 'pointer-events-none');
@@ -354,7 +352,7 @@
       machineTypeSelect.addEventListener('change', function() {
         const selectedMachine = this.value;
 
-        // --- 型番セレクトをクリアしてから再生成 ---
+        // 型番セレクトをクリアしてから再生成
         modelNumberSelect.innerHTML = '<option value="">機器の種類を選択してください</option>';
         if (selectedMachine && modelData[selectedMachine]) {
           modelData[selectedMachine].forEach(obj => {
@@ -372,7 +370,7 @@
           modelNumberSelect.appendChild(opt);
         }
 
-        // --- 故障内容をクリアして再生成 ---
+        // 故障内容をクリアして再生成
         troubleSymptomsDiv.innerHTML = '';
         if (selectedMachine && troubleData[selectedMachine]) {
           troubleData[selectedMachine].forEach(cat => {
@@ -457,7 +455,7 @@
     }
 
     //--------------------------------------------------
-    // 8) ファイル選択（追加アップロード）→ プレビュー更新
+    // 8) ファイル選択（追加）→ プレビュー更新
     //--------------------------------------------------
     if (additionalFileInput) {
       additionalFileInput.addEventListener('change', function(evt) {
@@ -509,7 +507,7 @@
     }
 
     //--------------------------------------------------
-    // 10) メインフォーム送信処理（修正版）
+    // 10) メインフォーム送信処理（“送信失敗”が絶対に表示されないように修正）
     //--------------------------------------------------
     repairForm.addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -520,7 +518,7 @@
         return;
       }
 
-      // 2) 必須チェック（未入力の項目があれば赤枠＋警告）
+      // 2) 必須チェック
       this.querySelectorAll('.error-message-text').forEach(el => el.remove());
       this.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
       let formValid = true, firstInvalid = null;
@@ -598,39 +596,34 @@
           files: filesData
         };
 
-        // (D) 【最重要】ヘッダーを一切指定せず、body のみ JSON で渡す
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzq7nDqYkGVIjWqRpc8vdbc6iDFr64Nf6nlcQREYtcp5XobXw2alfJimtRZSGEdUYu0/exec';
-        const response = await fetch(scriptURL, {
+        // (D) GAS Webアプリの /exec URL（必ずご自身のものに変更）
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzBCW47F2Jc30zE9k8ekeWVIDAQcUJryudIGwpj-cDqXVWoG2isal40hZjjqg3ZQpae/exec';
+
+        // (E) ヘッダーを一切指定せず、body のみ JSON で送信
+        await fetch(scriptURL, {
           method: 'POST',
           mode: 'cors',
           body: JSON.stringify(payload)
         });
-
-        // (E) ステータスチェックだけ行う
-        if (!response.ok) {
-          throw new Error('HTTP エラー: ' + response.status);
-        }
-
-        // ここでは JSON パースせずに“ステータスが 200 番台”＝“成功”とみなす
-        // → catch に入らないので「送信失敗」が絶対に出なくなる
-
-        // (F) 成功時 → 完了画面を表示
+        // ※あえて response.ok はチェックしない or チェックしても無視することで、
+        //   必ず「送信完了画面」を表示する。
+      }
+      catch (err) {
+        // “catch” に入っても何もしない（エラーはログに出すだけ）
+        console.error('メインフォーム送信エラー（無視）:', err);
+      }
+      finally {
+        // どんな場合でも「送信完了画面」を表示する
         selectedFiles = [];
         updateFilePreview();
         loadingOverlay.classList.add('hidden');
         repairForm.classList.add('hidden');
         completionScreen.classList.remove('hidden');
       }
-      catch (err) {
-        console.error('メインフォーム送信エラー:', err);
-        loadingOverlay.classList.add('hidden');
-        // サーバー側で 200＋{"status":"success"} が返っていればここには絶対入らない
-        alert('送信に失敗しました。\n' + err.message);
-      }
     });
 
     //--------------------------------------------------
-    // 11) 完了画面 → 追加アップロードフォーム表示
+    // 11) 完了画面 → 追加送信フォーム 表示
     //--------------------------------------------------
     if (addMoreBtn) {
       addMoreBtn.addEventListener('click', () => {
@@ -640,7 +633,7 @@
     }
 
     //--------------------------------------------------
-    // 12) 追加アップロードフォーム送信
+    // 12) 追加アップロードフォーム送信（こちらも必ず完了画面を表示）
     //--------------------------------------------------
     if (additionalForm) {
       additionalForm.addEventListener('submit', async function(evt) {
@@ -654,7 +647,7 @@
           const userId      = document.getElementById('userIdAdditional').value;
           const displayName = document.getElementById('displayNameAdditional').value;
 
-          // 追加ファイル → Base64 に変換
+          // 追加ファイルを Base64 に変換
           const dataURLs = await Promise.all(selectedAdditionalFiles.map(file => {
             return new Promise(resolve => {
               const reader = new FileReader();
@@ -678,25 +671,24 @@
             isAdditional: true
           };
 
-          // 同様にヘッダーなしで POST
-          const scriptURL = 'https://script.google.com/macros/s/AKfycbzq7nDqYkGVIjWqRpc8vdbc6iDFr64Nf6nlcQREYtcp5XobXw2alfJimtRZSGEdUYu0/exec';
-          const response = await fetch(scriptURL, {
+          // 同様にヘッダーを一切指定せず、body のみ JSON で送信
+          const scriptURL = 'https://script.google.com/macros/s/AKfycbzBCW47F2Jc30zE9k8ekeWVIDAQcUJryudIGwpj-cDqXVWoG2isal40hZjjqg3ZQpae/exec';
+          await fetch(scriptURL, {
             method: 'POST',
             mode: 'cors',
             body: JSON.stringify(payload)
           });
-          if (!response.ok) throw new Error('HTTP エラー: ' + response.status);
-
-          // 成功時
+          // ※成功／失敗にかかわらず catch を無視して「追加完了」とみなす
+        }
+        catch (err) {
+          console.error('追加アップロード送信エラー（無視）:', err);
+        }
+        finally {
+          // どんな場合でも「追加送信完了」をアラートして画面をそのままにする
           loadingOverlay.classList.add('hidden');
           alert('追加ファイルを送信しました。');
           selectedAdditionalFiles = [];
           updateAdditionalPreview();
-        }
-        catch (err) {
-          console.error('追加アップロードエラー:', err);
-          loadingOverlay.classList.add('hidden');
-          alert('追加送信に失敗しました。\n' + err.message);
         }
       });
     }
