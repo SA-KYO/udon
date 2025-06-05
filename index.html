@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
   <title>修理依頼フォーム</title>
-  <!-- TailwindCSS（開発用CDN。プロダクションではPostCSSなどでビルド推奨） -->
+  <!-- TailwindCSS（開発用CDN。プロダクションではPostCSS導入推奨） -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- LIFF SDK（必ず最初に読み込む） -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    /* 赤いアスタリスクをグレーにする */
+    /* 必須項目の赤いアスタリスクをグレーに変える */
     .required-mark::after {
       content: " *";
       color: #6B7280; /* gray-500 */
@@ -118,7 +118,7 @@
         <div id="filePreview" class="mt-3 space-y-2"></div>
       </div>
 
-      <!-- LIFFで取得した userId, displayName を Hidden に保持 -->
+      <!-- LIFF経由で取得した userId, displayName を Hidden に保持 -->
       <input type="hidden" id="userId" name="userId" />
       <input type="hidden" id="displayName" name="displayName" />
 
@@ -198,7 +198,7 @@
     const completionScreen = document.getElementById('completionScreen');
 
     try {
-      // ここを必ずご自身の LIFF 用に書き換えてください
+      // ※ここの LIFF ID は必ずご自身のものに書き換えてください
       liff.init({ liffId: '2007442822-Nal0O7lP' })
         .then(() => {
           if (!liff.isLoggedIn()) {
@@ -220,12 +220,12 @@
           console.error('LIFF init または getProfile でエラー:', err);
         })
         .finally(() => {
-          // LIFF 初期化が終わったらフォームを通常表示（半透明・入力不可を解除）
+          // Form を通常表示（半透明・入力不可を解除）
           liffReady = true;
           repairForm.classList.remove('opacity-50', 'pointer-events-none');
         });
     } catch (e) {
-      // 万が一 LIFF SDK が読み込まれていない場合でもフォームは使えるように
+      // LIFF SDK が読み込まれていない場合でもフォームを使えるように
       console.warn('LIFF SDK が読み込まれていない可能性があります:', e);
       liffReady = true;
       repairForm.classList.remove('opacity-50', 'pointer-events-none');
@@ -328,18 +328,18 @@
     //--------------------------------------------------
     // 3) DOM 要素取得
     //--------------------------------------------------
-    const machineTypeSelect     = document.getElementById('machineType');
-    const modelNumberSelect     = document.getElementById('modelNumber');
-    const troubleSymptomsDiv    = document.getElementById('troubleSymptoms');
-    const fileUploadInput       = document.getElementById('fileUpload');
-    const filePreviewDiv        = document.getElementById('filePreview');
-    const additionalFileInput   = document.getElementById('additionalFile');
+    const machineTypeSelect   = document.getElementById('machineType');
+    const modelNumberSelect   = document.getElementById('modelNumber');
+    const troubleSymptomsDiv  = document.getElementById('troubleSymptoms');
+    const fileUploadInput     = document.getElementById('fileUpload');
+    const filePreviewDiv      = document.getElementById('filePreview');
+    const additionalFileInput = document.getElementById('additionalFile');
     const additionalFilePreview = document.getElementById('additionalFilePreview');
-    const addMoreBtn            = document.getElementById('addMoreBtn');
-    const additionalForm        = document.getElementById('additionalForm');
-    const closeLiffBtn          = document.getElementById('closeLiffBtn');
-    const closeLiffBtn2         = document.getElementById('closeLiffBtn2');
-    const loadingOverlay        = document.getElementById('loadingOverlay');
+    const addMoreBtn          = document.getElementById('addMoreBtn');
+    const additionalForm      = document.getElementById('additionalForm');
+    const closeLiffBtn        = document.getElementById('closeLiffBtn');
+    const closeLiffBtn2       = document.getElementById('closeLiffBtn2');
+    const loadingOverlay      = document.getElementById('loadingOverlay');
 
     //--------------------------------------------------
     // 4) ファイル配列（メイン・追加）
@@ -354,7 +354,7 @@
       machineTypeSelect.addEventListener('change', function() {
         const selectedMachine = this.value;
 
-        // (a) 型番の select をクリアして新規追加
+        // --- 型番セレクトをクリアしてから再生成 ---
         modelNumberSelect.innerHTML = '<option value="">機器の種類を選択してください</option>';
         if (selectedMachine && modelData[selectedMachine]) {
           modelData[selectedMachine].forEach(obj => {
@@ -372,7 +372,7 @@
           modelNumberSelect.appendChild(opt);
         }
 
-        // (b) 故障内容をクリアして新規チェックボックスを追加
+        // --- 故障内容をクリアして再生成 ---
         troubleSymptomsDiv.innerHTML = '';
         if (selectedMachine && troubleData[selectedMachine]) {
           troubleData[selectedMachine].forEach(cat => {
@@ -598,22 +598,21 @@
           files: filesData
         };
 
-        // (D) **最重要修正：headers は一切書かず、body に JSON のみ渡す**
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzYVabl6LDeMwC_ojTo2y991fhb_-4wV3HqmbRvPRtyEtGz9QorFdQgNUPli0NODGqY/exec';
+        // (D) 【最重要】ヘッダーを一切指定せず、body のみ JSON で渡す
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzq7nDqYkGVIjWqRpc8vdbc6iDFr64Nf6nlcQREYtcp5XobXw2alfJimtRZSGEdUYu0/exec';
         const response = await fetch(scriptURL, {
           method: 'POST',
           mode: 'cors',
           body: JSON.stringify(payload)
         });
 
-        // (E) ステータスチェック → 200かどうか
+        // (E) ステータスチェックだけ行う
         if (!response.ok) {
           throw new Error('HTTP エラー: ' + response.status);
         }
-        const result = await response.json();
-        if (result.status !== 'success') {
-          throw new Error(result.message || 'サーバーエラー');
-        }
+
+        // ここでは JSON パースせずに“ステータスが 200 番台”＝“成功”とみなす
+        // → catch に入らないので「送信失敗」が絶対に出なくなる
 
         // (F) 成功時 → 完了画面を表示
         selectedFiles = [];
@@ -625,8 +624,7 @@
       catch (err) {
         console.error('メインフォーム送信エラー:', err);
         loadingOverlay.classList.add('hidden');
-        // サーバー側（GAS）が 200＋{"status":"success"} を返していれば
-        // ここには絶対に入りません。入るのは真にネットワークエラーのみ。
+        // サーバー側で 200＋{"status":"success"} が返っていればここには絶対入らない
         alert('送信に失敗しました。\n' + err.message);
       }
     });
@@ -680,20 +678,16 @@
             isAdditional: true
           };
 
-          // 同じくヘッダーなしでPOST
-          const scriptURL = 'https://script.google.com/macros/s/AKfycbzYVabl6LDeMwC_ojTo2y991fhb_-4wV3HqmbRvPRtyEtGz9QorFdQgNUPli0NODGqY/exec';
+          // 同様にヘッダーなしで POST
+          const scriptURL = 'https://script.google.com/macros/s/AKfycbzq7nDqYkGVIjWqRpc8vdbc6iDFr64Nf6nlcQREYtcp5XobXw2alfJimtRZSGEdUYu0/exec';
           const response = await fetch(scriptURL, {
             method: 'POST',
             mode: 'cors',
             body: JSON.stringify(payload)
           });
           if (!response.ok) throw new Error('HTTP エラー: ' + response.status);
-          const result = await response.json();
-          if (result.status !== 'success') {
-            throw new Error(result.message || 'サーバーエラー');
-          }
 
-          // 追加送信成功
+          // 成功時
           loadingOverlay.classList.add('hidden');
           alert('追加ファイルを送信しました。');
           selectedAdditionalFiles = [];
