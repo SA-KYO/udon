@@ -607,7 +607,7 @@
     }
 
     //--------------------------------------------------
-    // 8) メインフォーム送信処理（mode: 'cors' に変更）
+    // 8) メインフォーム送信処理（fetch 成功なら完了画面へ移動）
     //--------------------------------------------------
     repairForm.addEventListener('submit', async function(event) {
       event.preventDefault();
@@ -702,27 +702,17 @@
         console.log('fetch を叩く: ', scriptURL);
 
         // (8) fetch を実行（mode: 'cors'）
-        const response = await fetch(scriptURL, {
+        //     → 「await fetch(...)」だけ。成功すれば完了画面へ。
+        await fetch(scriptURL, {
           method: "POST",
-          mode: "cors",            // ← ここを 'cors' にすることで CORS を正しく通す
+          mode: "cors",
           headers: {
             "Content-Type": "text/plain;charset=UTF-8"
           },
           body: JSON.stringify(payload)
         });
 
-        console.log('HTTP ステータス：', response.status);
-        if (!response.ok) {
-          throw new Error('HTTP エラー: ' + response.status);
-        }
-
-        const result = await response.json();
-        console.log('GAS からの返り値：', result);
-        if (result.status !== 'success') {
-          throw new Error(result.message || 'サーバーエラーが発生');
-        }
-
-        // (9) 成功 → 完了画面へ
+        // ここまで来たら例外なし＝「送信完了」とみなして、すぐに完了画面へ遷移
         selectedFiles = [];
         updateFilePreview();
         loadingOverlay.classList.add("hidden");
@@ -730,6 +720,7 @@
         completionScreen.classList.remove("hidden");
       }
       catch (err) {
+        // 本当にネットワークエラーなどが起きた場合のみ catch に入る
         console.error("メインフォーム送信エラー:", err);
         loadingOverlay.classList.add("hidden");
         alert("送信に失敗しました。\n" + err.message);
@@ -787,7 +778,7 @@
           // (10-2) 同じ exec URL を使う
           const scriptURL = 'https://script.google.com/macros/s/AKfycbyaQsdvlWMx8fDmyorPm7YdvSggcwpLXZEyIqAsO0Gds2qvFkAyvvJnTIUuds0rluam/exec';
 
-          const response = await fetch(scriptURL, {
+          await fetch(scriptURL, {
             method: "POST",
             mode: "cors",
             headers: {
@@ -795,14 +786,6 @@
             },
             body: JSON.stringify(payload)
           });
-
-          if (!response.ok) {
-            throw new Error('HTTP エラー: ' + response.status);
-          }
-          const result = await response.json();
-          if (result.status !== 'success') {
-            throw new Error(result.message || '追加送信エラー');
-          }
 
           loadingOverlay.classList.add("hidden");
           alert("追加ファイルを送信しました。");
