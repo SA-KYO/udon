@@ -3,182 +3,258 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <title>修理依頼フォーム</title>
 
-  <!-- Tailwind CSS（開発用CDN。プロダクションでは PostCSS + PurgeCSS などを導入することを推奨） -->
+  <!-- Tailwind CSS CDN（開発用。プロダクションでは PostCSS + PurgeCSS 等導入推奨） -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind のカスタマイズ（UI調整用） -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandPurple: {
+              50:  '#f5f3ff',
+              100: '#ede9fe',
+              200: '#ddd6fe',
+              300: '#c4b5fd',
+              400: '#a78bfa',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+              800: '#5b21b6',
+              900: '#4c1d95',
+            }
+          },
+          fontFamily: {
+            body: ['"Noto Sans JP"', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+
   <!-- LIFF SDK を必ず最初に読み込む -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    /* 必須マークをグレーにする例 */
+    /* 必須マークをやや濃いグレーに */
     .required-mark::after {
       content: " *";
-      color: #6B7280; /* Gray-500 */
+      color: #6B7280; /* gray-500 */
     }
-    /* エラーメッセージ用スタイル */
+    /* エラーメッセージ用 */
     .error-message-text {
       font-size: 0.75rem; /* text-xs */
-      color: #DC2626;     /* red-600 */
+      color: #DC2626;    /* red-600 */
       margin-top: 0.25rem; /* mt-1 */
     }
   </style>
 </head>
-<body class="bg-gray-100">
-  <div class="container mx-auto max-w-2xl p-4 sm:p-6 lg:p-8">
-    <!-- ヘッダー -->
-    <header class="mb-6 text-center">
-      <h1 class="text-2xl sm:text-3xl font-bold text-gray-700">修理依頼フォーム</h1>
-    </header>
 
-    <!-- メインフォーム（初期は半透明＆入力不可。LIFF 初期化後に解除） -->
-    <form id="repairForm"
-          class="space-y-6 bg-gray-50 p-6 rounded-lg shadow-sm opacity-50 pointer-events-none">
-      <!-- LIFF 初期化後に 'opacity-50 pointer-events-none' を外して入力可能にする -->
-
-      <!-- 1) お客様情報 -->
-      <div>
-        <label for="storeName" class="block text-sm font-medium text-gray-700 required-mark">店舗名</label>
-        <input type="text" id="storeName" name="storeName" required
-               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md
-                      focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm bg-white text-gray-900"/>
-      </div>
-      <div>
-        <label for="contactName" class="block text-sm font-medium text-gray-700 required-mark">ご担当者名</label>
-        <input type="text" id="contactName" name="contactName" required
-               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md
-                      focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm bg-white text-gray-900"/>
-      </div>
-      <div>
-        <label for="phoneNumber" class="block text-sm font-medium text-gray-700 required-mark">
-          お電話番号 <span class="text-xs text-gray-500">(ハイフンなし)</span>
-        </label>
-        <input type="tel" id="phoneNumber" name="phoneNumber" required
-               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md
-                      focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm bg-white text-gray-900"/>
-      </div>
-      <div>
-        <label for="address" class="block text-sm font-medium text-gray-700">ご住所</label>
-        <input type="text" id="address" name="address"
-               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md
-                      focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm bg-white text-gray-900"/>
+<body class="bg-gray-50 font-body text-gray-800 leading-relaxed">
+  <div class="min-h-screen flex items-start justify-center py-8 px-4">
+    <div class="w-full max-w-2xl bg-white rounded-xl shadow-lg overflow-hidden">
+      <!-- ヘッダー -->
+      <div class="bg-brandPurple-600 py-6 px-6">
+        <h1 class="text-2xl sm:text-3xl font-bold text-white text-center">修理依頼フォーム</h1>
       </div>
 
-      <!-- 2) 機器情報 -->
-      <div>
-        <label for="machineType" class="block text-sm font-medium text-gray-700 required-mark">機器の種類</label>
-        <select id="machineType" name="machineType" required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md
-                       focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm text-gray-900">
-          <option value="">選択してください</option>
-          <option value="seimenki">製麺機</option>
-          <option value="presski">プレス機</option>
-          <option value="noodlekneader">ニーダー(ミキサー)</option>
-          <option value="other_machine">その他</option>
-        </select>
-      </div>
-      <div>
-        <label for="modelNumber" class="block text-sm font-medium text-gray-700">型番</label>
-        <select id="modelNumber" name="modelNumber"
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md
-                       focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm text-gray-900">
-          <option value="">機器の種類を選択してください</option>
-        </select>
-      </div>
+      <!-- メインコンテンツ -->
+      <div class="p-8">
+        <form id="repairForm" class="space-y-8 opacity-50 pointer-events-none">
 
-      <!-- 3) 故障内容（チェックボックス／複数選択可） -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700">故障内容（複数選択可）</label>
-        <div id="troubleSymptoms"
-             class="mt-2 p-3 border border-gray-200 rounded-md bg-white text-gray-700 text-sm">
-          <p>機器の種類を選択すると、故障内容の選択肢が表示されます。</p>
+          <!-- ■ セクション：お客様情報 -->
+          <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700 border-b border-gray-200 pb-2">お客様情報</h2>
+            <!-- 店舗名 -->
+            <div>
+              <label for="storeName" class="block text-sm font-medium text-gray-600 required-mark">店舗名</label>
+              <input type="text" id="storeName" name="storeName" required
+                class="mt-1 w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-md 
+                       focus:outline-none focus:ring-2 focus:ring-brandPurple-400 focus:border-brandPurple-500 
+                       transition-colors duration-200"/>
+            </div>
+            <!-- ご担当者名 -->
+            <div>
+              <label for="contactName" class="block text-sm font-medium text-gray-600 required-mark">ご担当者名</label>
+              <input type="text" id="contactName" name="contactName" required
+                class="mt-1 w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-md 
+                       focus:outline-none focus:ring-2 focus:ring-brandPurple-400 focus:border-brandPurple-500 
+                       transition-colors duration-200"/>
+            </div>
+            <!-- 電話番号 -->
+            <div>
+              <label for="phoneNumber" class="block text-sm font-medium text-gray-600 required-mark">
+                お電話番号 <span class="text-xs text-gray-500">(ハイフンなし)</span>
+              </label>
+              <input type="tel" id="phoneNumber" name="phoneNumber" required
+                class="mt-1 w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-md 
+                       focus:outline-none focus:ring-2 focus:ring-brandPurple-400 focus:border-brandPurple-500 
+                       transition-colors duration-200"/>
+            </div>
+            <!-- ご住所 -->
+            <div>
+              <label for="address" class="block text-sm font-medium text-gray-600">ご住所</label>
+              <input type="text" id="address" name="address"
+                class="mt-1 w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-md 
+                       focus:outline-none focus:ring-2 focus:ring-brandPurple-400 focus:border-brandPurple-500 
+                       transition-colors duration-200"/>
+            </div>
+          </div>
+
+          <!-- ■ セクション：機器情報 -->
+          <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700 border-b border-gray-200 pb-2">機器情報</h2>
+            <!-- 機器の種類 -->
+            <div>
+              <label for="machineType" class="block text-sm font-medium text-gray-600 required-mark">機器の種類</label>
+              <select id="machineType" name="machineType" required
+                class="mt-1 w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-md 
+                       focus:outline-none focus:ring-2 focus:ring-brandPurple-400 focus:border-brandPurple-500 
+                       transition-colors duration-200">
+                <option value="">選択してください</option>
+                <option value="seimenki">製麺機</option>
+                <option value="presski">プレス機</option>
+                <option value="noodlekneader">ニーダー(ミキサー)</option>
+                <option value="other_machine">その他</option>
+              </select>
+            </div>
+            <!-- 型番 -->
+            <div>
+              <label for="modelNumber" class="block text-sm font-medium text-gray-600">型番</label>
+              <select id="modelNumber" name="modelNumber"
+                class="mt-1 w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-md 
+                       focus:outline-none focus:ring-2 focus:ring-brandPurple-400 focus:border-brandPurple-500 
+                       transition-colors duration-200">
+                <option value="">機器の種類を選択してください</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ■ セクション：故障内容 -->
+          <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700 border-b border-gray-200 pb-2">故障内容</h2>
+            <p class="text-sm text-gray-500">（複数選択可）</p>
+            <div id="troubleSymptoms"
+                 class="mt-2 p-4 bg-gray-50 border border-gray-200 rounded-md text-gray-700 text-sm">
+              <p>機器の種類を選択すると、故障内容のチェックボックスが表示されます。</p>
+            </div>
+          </div>
+
+          <!-- ■ セクション：詳細な症状 -->
+          <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700 border-b border-gray-200 pb-2">詳細な症状</h2>
+            <textarea id="detailedDescription" name="detailedDescription" rows="4"
+              class="mt-1 w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-md 
+                     focus:outline-none focus:ring-2 focus:ring-brandPurple-400 focus:border-brandPurple-500 
+                     transition-colors duration-200"
+              placeholder="具体的な状況・症状があればご記入ください（任意）"></textarea>
+          </div>
+
+          <!-- ■ セクション：写真・動画アップロード -->
+          <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700 border-b border-gray-200 pb-2">写真・動画で状況を詳しく報告</h2>
+            <p class="text-sm text-gray-500">写真や動画をお送りいただくと、よりスムーズで的確な対応が可能になります。</p>
+            <!-- 画像部分（サンプルに合わせて再現） -->
+            <div class="mt-2 p-6 bg-indigo-50 border-2 border-dashed border-gray-300 rounded-lg text-center">
+              <label for="fileUpload"
+                     class="inline-flex items-center px-6 py-3 bg-white border border-gray-300 rounded-md
+                            hover:bg-gray-100 transition-colors duration-200 cursor-pointer text-indigo-700 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-600" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M4 8V5a3 3 0 013-3h10a3 3 0 013 3v3M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <span class="text-base">📷 カメラで撮影 / 📁 ファイルを選択</span>
+                <input type="file" id="fileUpload" name="fileUpload" accept="image/*,video/*" multiple
+                       class="sr-only" />
+              </label>
+            </div>
+            <div class="text-left text-sm text-gray-600 space-y-1 mt-2">
+              <p>・異音や動作不良の場合は、動画での送信を推奨します。</p>
+              <p>・動画を送信される場合は、30秒以内でお願いいたします。</p>
+              <p>・画像は5枚、動画は2本まで添付できます。</p>
+            </div>
+            <!-- プレビュー用要素 -->
+            <div id="filePreview" class="mt-4 space-y-2"></div>
+          </div>
+
+          <!-- ■ Hidden：LIFF ユーザー情報 -->
+          <input type="hidden" id="userId" name="userId" />
+          <input type="hidden" id="displayName" name="displayName" />
+
+          <!-- ■ 送信ボタン -->
+          <div class="pt-4">
+            <button type="submit"
+                    class="w-full py-3 px-4 bg-brandPurple-600 hover:bg-brandPurple-700 text-white font-semibold rounded-md 
+                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandPurple-500 transition-colors duration-200">
+              送信する
+            </button>
+          </div>
+        </form>
+
+        <!-- ■ 送信完了画面（初期は hidden） -->
+        <div id="completionScreen" class="hidden text-center py-12 px-6">
+          <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-16 w-16 text-green-500 mb-4" fill="none"
+               viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M9 12l2 2l4 -4M12 22a10 10 0 10 -10 -10a10 10 0 0010 10z"/>
+          </svg>
+          <p class="text-2xl font-semibold text-gray-700 mb-2">送信が完了しました。</p>
+          <p class="text-gray-600 mb-6">ご協力ありがとうございました。</p>
+          <div class="space-y-3">
+            <button id="addMoreBtn"
+                    class="w-full py-3 px-4 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-md 
+                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
+              今回の依頼に追加で画像・動画を送る
+            </button>
+            <button id="closeLiffBtn"
+                    class="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md 
+                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
+              LINEに戻る
+            </button>
+          </div>
         </div>
+
+        <!-- ■ 追加アップロードフォーム（初期は hidden） -->
+        <form id="additionalForm" class="space-y-6 hidden mt-6 bg-white p-6 rounded-lg shadow-sm">
+          <h2 class="text-xl font-semibold text-gray-700 mb-2">追加の写真・動画アップロード</h2>
+          <p class="text-sm text-gray-500 mb-2">※画像は最大5枚、動画は最大2本まで添付可能</p>
+          <div>
+            <label for="additionalFile"
+                   class="inline-flex items-center px-6 py-2 bg-gray-200 text-gray-700 font-medium rounded-md
+                          hover:bg-gray-300 transition-colors duration-200 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-600" fill="none"
+                   viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M4 8V5a3 3 0 013-3h10a3 3 0 013 3v3M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+              カメラで撮影 / ファイルを選択
+              <input type="file" id="additionalFile" name="additionalFile" accept="image/*,video/*" multiple
+                     class="sr-only" />
+            </label>
+          </div>
+          <div id="additionalFilePreview" class="mt-3 space-y-2"></div>
+          <!-- 追加用 Hidden -->
+          <input type="hidden" id="userIdAdditional" name="userId" />
+          <input type="hidden" id="displayNameAdditional" name="displayName" />
+          <div class="space-y-4 pt-4">
+            <button type="submit"
+                    class="w-full py-3 px-4 bg-brandPurple-600 hover:bg-brandPurple-700 text-white font-semibold rounded-md 
+                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandPurple-500 transition-colors duration-200">
+              送信する
+            </button>
+            <button type="button" id="closeLiffBtn2"
+                    class="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md 
+                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
+              LINEに戻る
+            </button>
+          </div>
+        </form>
       </div>
-
-      <!-- 4) 詳細な症状 -->
-      <div>
-        <label for="detailedDescription" class="block text-sm font-medium text-gray-700">詳細な症状</label>
-        <textarea id="detailedDescription" name="detailedDescription" rows="4"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md
-                         focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm text-gray-900"></textarea>
-      </div>
-
-      <!-- 5) 写真・動画アップロード -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700">写真・動画で状況を詳しく報告</label>
-        <p class="text-xs text-gray-500 mb-2">※画像は最大5枚、動画は最大2本まで添付可能</p>
-        <div>
-          <label for="fileUpload"
-                 class="inline-block px-4 py-2 bg-gray-300 text-gray-700 font-medium rounded-md
-                        cursor-pointer hover:bg-gray-400 transition-colors">
-            カメラで撮影 / ファイルを選択
-            <input type="file" id="fileUpload" name="fileUpload" accept="image/*,video/*"
-                   class="sr-only" multiple />
-          </label>
-        </div>
-        <div id="filePreview" class="mt-3 space-y-2"></div>
-      </div>
-
-      <!-- 6) LIFF 経由で取得した userId, displayName を Hidden に保持 -->
-      <input type="hidden" id="userId" name="userId" />
-      <input type="hidden" id="displayName" name="displayName" />
-
-      <!-- 7) 送信ボタン -->
-      <div class="pt-2">
-        <button type="submit"
-                class="w-full py-3 px-4 bg-gray-700/80 hover:bg-gray-700/100 text-white font-medium rounded-md
-                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-          送信する
-        </button>
-      </div>
-    </form>
-
-    <!-- 送信完了画面（初期は hidden） -->
-    <div id="completionScreen" class="hidden text-center bg-gray-50 p-6 rounded-lg shadow-sm">
-      <p class="text-lg font-medium mb-4 text-gray-700">送信が完了しました。</p>
-      <p class="mb-6 text-gray-600">ご協力ありがとうございました。</p>
-      <button id="addMoreBtn"
-              class="w-full py-3 px-4 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-md
-                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-        今回の依頼に追加で画像・動画を送る
-      </button>
-      <button id="closeLiffBtn"
-              class="w-full mt-4 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md
-                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-        LINEに戻る
-      </button>
     </div>
-
-    <!-- 追加アップロードフォーム（初期は hidden） -->
-    <form id="additionalForm" class="space-y-6 hidden bg-gray-50 p-6 rounded-lg shadow-sm">
-      <h2 class="text-lg font-medium text-gray-700">追加の写真・動画アップロード</h2>
-      <p class="text-gray-600 mb-2">※画像は最大5枚、動画は最大2本まで選択可能</p>
-      <div>
-        <label for="additionalFile"
-               class="inline-block px-4 py-2 bg-gray-300 text-gray-700 font-medium rounded-md
-                      cursor-pointer hover:bg-gray-400 transition-colors">
-          カメラで撮影 / ファイルを選択
-          <input type="file" id="additionalFile" name="additionalFile" accept="image/*,video/*"
-                 class="sr-only" multiple />
-        </label>
-      </div>
-      <div id="additionalFilePreview" class="mt-3 space-y-2"></div>
-      <!-- 追加用 Hidden -->
-      <input type="hidden" id="userIdAdditional" name="userId" />
-      <input type="hidden" id="displayNameAdditional" name="displayName" />
-      <div class="pt-2">
-        <button type="submit"
-                class="w-full py-3 px-4 bg-gray-700/80 hover:bg-gray-700/100 text-white font-medium rounded-md
-                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-          送信する
-        </button>
-        <button type="button" id="closeLiffBtn2"
-                class="w-full mt-4 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md
-                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-          LINEに戻る
-        </button>
-      </div>
-    </form>
   </div>
 
   <!-- ローディングオーバーレイ -->
@@ -198,7 +274,7 @@
     const loadingOverlay   = document.getElementById('loadingOverlay');
 
     try {
-      // ← ご自身の LIFF ID に必ず置き換えてください
+      // ← ご自身の LIFF ID に置き換えてください
       liff.init({ liffId: '2007442822-Nal0O7lP' })
         .then(() => {
           if (!liff.isLoggedIn()) {
@@ -443,9 +519,9 @@
       filePreviewDiv.innerHTML = '';
       selectedFiles.forEach((file, idx) => {
         const wrapper = document.createElement('div');
-        wrapper.className = 'flex items-center justify-between p-2 bg-gray-100 rounded-md';
+        wrapper.className = 'flex items-center justify-between p-3 bg-gray-100 rounded-md';
         const span = document.createElement('span');
-        span.className = 'text-sm truncate text-gray-800';
+        span.className = 'text-sm text-gray-800 truncate';
         span.style.maxWidth = 'calc(100% - 60px)';
         span.textContent = `${file.name} (${(file.size/1024).toFixed(1)} KB)`;
         const btn = document.createElement('button');
@@ -502,9 +578,9 @@
       additionalFilePreview.innerHTML = '';
       selectedAdditionalFiles.forEach((file, idx) => {
         const wrapper = document.createElement('div');
-        wrapper.className = 'flex items-center justify-between p-2 bg-gray-100 rounded-md';
+        wrapper.className = 'flex items-center justify-between p-3 bg-gray-100 rounded-md';
         const span = document.createElement('span');
-        span.className = 'text-sm truncate text-gray-800';
+        span.className = 'text-sm text-gray-800 truncate';
         span.style.maxWidth = 'calc(100% - 60px)';
         span.textContent = `${file.name} (${(file.size/1024).toFixed(1)} KB)`;
         const btn = document.createElement('button');
@@ -522,7 +598,7 @@
     }
 
     //--------------------------------------------------
-    // 8) メインフォーム送信処理（“Failed to fetch” を絶対にアラート表示しないよう修正）
+    // 8) メインフォーム送信処理（正常か失敗かをきちんと判定）
     //--------------------------------------------------
     repairForm.addEventListener('submit', async function(event) {
       event.preventDefault();
@@ -561,86 +637,98 @@
       // (3) ローディング表示
       loadingOverlay.classList.remove("hidden");
 
-      try {
-        // (4) 各入力値を取得
-        const storeName        = document.getElementById('storeName').value.trim();
-        const contactName      = document.getElementById('contactName').value.trim();
-        const phoneNumber      = document.getElementById('phoneNumber').value.trim();
-        const address          = document.getElementById('address').value.trim();
-        const machineTypeText  = machineTypeSelect.options[machineTypeSelect.selectedIndex].text;
-        const modelText        = modelNumberSelect.options[modelNumberSelect.selectedIndex]
-                                    ? modelNumberSelect.options[modelNumberSelect.selectedIndex].text
-                                    : "";
-        const symptomEls       = document.querySelectorAll('input[name="symptoms"]:checked');
-        const symptomTexts     = Array.from(symptomEls).map(el => el.parentNode.textContent.trim());
-        const detailedDesc     = document.getElementById('detailedDescription').value.trim();
-        const userIdValue      = document.getElementById('userId').value;
-        const displayNameValue = document.getElementById('displayName').value;
+      // (4) 各入力値を取得
+      const storeName        = document.getElementById('storeName').value.trim();
+      const contactName      = document.getElementById('contactName').value.trim();
+      const phoneNumber      = document.getElementById('phoneNumber').value.trim();
+      const address          = document.getElementById('address').value.trim();
+      const machineTypeText  = machineTypeSelect.options[machineTypeSelect.selectedIndex].text;
+      const modelText        = modelNumberSelect.options[modelNumberSelect.selectedIndex]
+                                  ? modelNumberSelect.options[modelNumberSelect.selectedIndex].text
+                                  : "";
+      const symptomEls       = document.querySelectorAll('input[name="symptoms"]:checked');
+      const symptomTexts     = Array.from(symptomEls).map(el => el.parentNode.textContent.trim());
+      const detailedDesc     = document.getElementById('detailedDescription').value.trim();
+      const userIdValue      = document.getElementById('userId').value;
+      const displayNameValue = document.getElementById('displayName').value;
 
-        // (5) 選択ファイルを Base64 に変換
-        let filesData = [];
-        if (selectedFiles.length > 0) {
-          const dataURLs = await Promise.all(selectedFiles.map(file => {
-            return new Promise(resolve => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result);
-              reader.readAsDataURL(file);
-            });
-          }));
-          filesData = dataURLs.map((dataURL, i) => ({
-            name: selectedFiles[i].name,
-            type: selectedFiles[i].type,
-            data: dataURL.split(',')[1]
-          }));
-        }
-
-        // (6) ペイロードを作成
-        const payload = {
-          userId: userIdValue,
-          displayName: displayNameValue,
-          storeName: storeName,
-          contactName: contactName,
-          phoneNumber: phoneNumber,
-          address: address,
-          equipmentType: machineTypeText,
-          modelNumber: modelText,
-          symptoms: symptomTexts,
-          detailedDescription: detailedDesc,
-          files: filesData
-        };
-
-        // ────────────────────────────────────────────────────────
-        // (7) 以下の scriptURL は「script​.googleusercontent​.com/…/exec?service=…」形式のURLを貼ってください
-        // ────────────────────────────────────────────────────────
-        const scriptURL = 
-          'https://script.google.com/macros/s/AKfycbyaQsdvlWMx8fDmyorPm7YdvSggcwpLXZEyIqAsO0Gds2qvFkAyvvJnTIUuds0rluam/exec';
-
-        // (8) fetch して送信（mode: 'no-cors' にする → “Failed to fetch” は必ず無視する）
-        try {
-          await fetch(scriptURL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-              "Content-Type": "text/plain;charset=UTF-8"
-            },
-            body: JSON.stringify(payload)
+      // (5) 選択ファイルを Base64 に変換
+      let filesData = [];
+      if (selectedFiles.length > 0) {
+        const dataURLs = await Promise.all(selectedFiles.map(file => {
+          return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(file);
           });
-          // ↑ ここで「Failed to fetch」などの例外が投げられても catch(fetchErr) で無視する
-        } catch (fetchErr) {
-          // ブラウザが返す "Failed to fetch" や CORS エラーはここで必ず無視します
-          console.warn("fetch がエラーになりましたが、無視して成功扱いにします:", fetchErr);
+        }));
+        filesData = dataURLs.map((dataURL, i) => ({
+          name: selectedFiles[i].name,
+          type: selectedFiles[i].type,
+          data: dataURL.split(',')[1]
+        }));
+      }
+
+      // (6) ペイロードを作成
+      const payload = {
+        userId: userIdValue,
+        displayName: displayNameValue,
+        storeName: storeName,
+        contactName: contactName,
+        phoneNumber: phoneNumber,
+        address: address,
+        equipmentType: machineTypeText,
+        modelNumber: modelText,
+        symptoms: symptomTexts,
+        detailedDescription: detailedDesc,
+        files: filesData
+      };
+
+      // ────────────────────────────────────────────────────────
+      // (7) ここで必ず「Network」タブに表示される
+      //      「script​.googleusercontent​.com/…/exec?service=…」
+      //      という最終 URL を丸ごとコピーして貼り付けてください。
+      //
+      //  例:
+      //  const scriptURL =
+      //    'https://script.googleusercontent.com/macros/s/AKfycbwU-XXXXXXXXXXXXX/exec?service=AKfycbwU…&…';
+      // ────────────────────────────────────────────────────────
+      const scriptURL =
+        'https://script.google.com/macros/s/AKfycbyaQsdvlWMx8fDmyorPm7YdvSggcwpLXZEyIqAsO0Gds2qvFkAyvvJnTIUuds0rluam/exec';
+
+      try {
+        // (8) fetch して送信（mode:"cors" にして CORS を通す）
+        const response = await fetch(scriptURL, {
+          method: "POST",
+          mode: "cors",
+          headers: {
+            "Content-Type": "text/plain;charset=UTF-8"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        // (9) ステータスコードをチェック
+        if (!response.ok) {
+          throw new Error(`HTTPエラー: ${response.status}`);
         }
 
-        // (9) 成功扱い：プレビューをクリアし、フォームを隠して完了画面を表示
+        // (10) JSON を取得
+        const result = await response.json();
+        if (result.status !== "success") {
+          throw new Error(result.message || "サーバーエラーが発生しました");
+        }
+
+        // (11) 成功：プレビューをクリアして完了画面へ遷移
         selectedFiles = [];
         updateFilePreview();
+
         loadingOverlay.classList.add("hidden");
         repairForm.classList.add("hidden");
         completionScreen.classList.remove("hidden");
       }
       catch (err) {
-        // ここには「fetch ではなく、JSON 組み立てなど JavaScript の根本的な例外が起きたとき」だけ到達します
-        console.error("メインフォーム処理中に本当の例外が発生:", err);
+        // 例外時：本当に送信できなかったときだけ「送信失敗」を表示
+        console.error("メインフォーム送信エラー:", err);
         loadingOverlay.classList.add("hidden");
         alert("送信に失敗しました。\n" + err.message);
       }
@@ -657,7 +745,7 @@
     }
 
     //--------------------------------------------------
-    // 10) 追加アップロードフォーム送信処理（同様に必ず成功扱い）
+    // 10) 追加アップロードフォーム送信処理
     //--------------------------------------------------
     if (additionalForm) {
       additionalForm.addEventListener("submit", async function(event) {
@@ -694,22 +782,26 @@
             isAdditional: true
           };
 
-          // 追加用も同じ“script​.googleusercontent​.com/…/exec?service=…” URL
+          // 先ほどコピーした“script​.googleusercontent​.com/…/exec?service=…” URL
           const scriptURL =
             'https://script.google.com/macros/s/AKfycbyaQsdvlWMx8fDmyorPm7YdvSggcwpLXZEyIqAsO0Gds2qvFkAyvvJnTIUuds0rluam/exec';
 
-          try {
-            await fetch(scriptURL, {
-              method: "POST",
-              mode: "no-cors",
-              headers: {
-                "Content-Type": "text/plain;charset=UTF-8"
-              },
-              body: JSON.stringify(payload)
-            });
-          } catch (fetchErr) {
-            // 同様に“Failed to fetch”を無視
-            console.warn("追加送信の fetch エラーを無視:", fetchErr);
+          // fetch して送信（mode:"cors"）
+          const response = await fetch(scriptURL, {
+            method: "POST",
+            mode: "cors",
+            headers: {
+              "Content-Type": "text/plain;charset=UTF-8"
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTPエラー: ${response.status}`);
+          }
+          const result = await response.json();
+          if (result.status !== "success") {
+            throw new Error(result.message || "追加送信エラー");
           }
 
           loadingOverlay.classList.add("hidden");
@@ -718,8 +810,7 @@
           updateAdditionalPreview();
         }
         catch (err) {
-          // JSON 組み立て等、fetch 以外の本当の例外のみキャッチ
-          console.error("追加アップロードフォーム処理中に本当の例外が発生:", err);
+          console.error("追加送信エラー:", err);
           loadingOverlay.classList.add("hidden");
           alert("追加送信に失敗しました。\n" + err.message);
         }
