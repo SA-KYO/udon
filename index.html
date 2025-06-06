@@ -198,7 +198,7 @@
     const completionScreen = document.getElementById('completionScreen');
 
     try {
-      // ■■■ ここを必ずご自身の LIFF ID に変更してください ■■■
+      // ★★★ ここを必ずご自身の LIFF ID に置き換えてください ★★★
       liff.init({ liffId: '2007442822-Nal0O7lP' })
         .then(() => {
           if (!liff.isLoggedIn()) {
@@ -215,7 +215,7 @@
           console.log('LIFF で取得した userId:', profile.userId);
         })
         .catch(err => {
-          console.error('LIFF init または getProfile でエラー:', err);
+          console.error('LIFF init/getProfile error:', err);
         })
         .finally(() => {
           // フォームを通常表示（半透明・入力不可を解除）
@@ -223,7 +223,7 @@
           repairForm.classList.remove('opacity-50', 'pointer-events-none');
         });
     } catch (e) {
-      // LIFF SDK が読み込まれていない or ブラウザなどで例外
+      // LIFF SDK が読み込まれていない等の例外
       console.warn('LIFF SDK が読み込まれていない可能性があります:', e);
       liffReady = true;
       repairForm.classList.remove('opacity-50', 'pointer-events-none');
@@ -509,7 +509,7 @@
     }
 
     //--------------------------------------------------
-    // 10) メインフォーム送信処理（正常：完了画面へ、異常：アラート「送信に失敗しました」）
+    // 10) メインフォーム送信処理（HTTP 200 → 完了画面、例外 → アラート）
     //--------------------------------------------------
     repairForm.addEventListener('submit', async function(evt) {
       evt.preventDefault();
@@ -599,7 +599,7 @@
         };
 
         // (D) GAS Webアプリの /exec URL（必ずご自身のものに置き換えてください）
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzTckpDmO6LRyTBTZ5jzya0F6vx0wvpgy-mgYKRL8TFk_Q5-mqRVerAE0zoDsqZa425/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbx5dJlzLc8k9nFUoSPuPa2I81cBrbVJWuq0meZWBW6PiprqXu0Bs2kPoqs44DjCBNy7/exec';
 
         // (E) fetch で送信
         const response = await fetch(scriptURL, {
@@ -609,26 +609,20 @@
           body: JSON.stringify(payload)
         });
 
-        // (F) HTTP ステータスが 200 以外ならエラーとみなす
-        if (!response.ok) {
+        // ───── HTTP ステータス 200 なら「完了画面」へ移行 ─────
+        if (response.ok) {
+          // 成功とみなし、フォームを非表示→完了画面を表示
+          selectedFiles = [];
+          updateFilePreview();
+          repairForm.classList.add('hidden');
+          completionScreen.classList.remove('hidden');
+        } else {
+          // ステータスが 200 以外（例：500 や 404）の場合は「送信に失敗」
           throw new Error(`HTTPエラー: ${response.status}`);
         }
-
-        // (G) レスポンス JSON を受け取り、status フィールドを確認
-        const ret = await response.json();
-        if (ret.status !== 'success') {
-          throw new Error(ret.message || 'サーバーエラー');
-        }
-
-        // ─────── ここまで来ればサーバーは正常に処理完了と判断 ───────
-        // 成功したら完了画面へ切り替え
-        selectedFiles = [];
-        updateFilePreview();
-        repairForm.classList.add('hidden');
-        completionScreen.classList.remove('hidden');
       }
       catch (err) {
-        // エラーが発生したらアラートで表示し、フォームはそのまま残す
+        // エラーが発生したらアラートで伝える。フォームはそのまま
         console.error('メインフォーム送信エラー:', err);
         alert('送信に失敗しました。\n' + err.message);
       }
@@ -649,7 +643,7 @@
     }
 
     //--------------------------------------------------
-    // 12) 追加アップロードフォーム送信処理（同じく正常／異常判定）
+    // 12) 追加アップロードフォーム送信処理（HTTP 200 → アラート成功、例外 → アラート失敗）
     //--------------------------------------------------
     if (additionalForm) {
       additionalForm.addEventListener('submit', async function(evt) {
@@ -661,10 +655,10 @@
 
         loadingOverlay.classList.remove('hidden');
         try {
-          const userId      = document.getElementById('userIdAdditional').value;
-          const displayName = document.getElementById('displayNameAdditional').value;
+          const userId       = document.getElementById('userIdAdditional').value;
+          const displayName  = document.getElementById('displayNameAdditional').value;
 
-          // 追加ファイル → Base64 に変換
+          // 追加ファイルを Base64 に変換
           const dataURLs = await Promise.all(selectedAdditionalFiles.map(file => {
             return new Promise(resolve => {
               const reader = new FileReader();
@@ -689,7 +683,7 @@
           };
 
           // GAS Webアプリの /exec URL（必ずご自身のものに置き換えてください）
-          const scriptURL = 'https://script.google.com/macros/s/AKfycbzTckpDmO6LRyTBTZ5jzya0F6vx0wvpgy-mgYKRL8TFk_Q5-mqRVerAE0zoDsqZa425/exec';
+          const scriptURL = 'https://script.google.com/macros/s/AKfycbx5dJlzLc8k9nFUoSPuPa2I81cBrbVJWuq0meZWBW6PiprqXu0Bs2kPoqs44DjCBNy7/exec';
 
           const response = await fetch(scriptURL, {
             method: 'POST',
@@ -698,18 +692,14 @@
             body: JSON.stringify(payload)
           });
 
-          if (!response.ok) {
+          if (response.ok) {
+            // 成功 → アラート表示
+            alert('追加ファイルを送信しました。');
+            selectedAdditionalFiles = [];
+            updateAdditionalPreview();
+          } else {
             throw new Error(`HTTPエラー: ${response.status}`);
           }
-          const ret = await response.json();
-          if (ret.status !== 'success') {
-            throw new Error(ret.message || 'サーバーエラー');
-          }
-
-          // 成功 → アラートで通知し、プレビューフィールドをクリア
-          alert('追加ファイルを送信しました。');
-          selectedAdditionalFiles = [];
-          updateAdditionalPreview();
         }
         catch (err) {
           console.error('追加アップロード送信エラー:', err);
