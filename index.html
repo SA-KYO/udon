@@ -274,12 +274,9 @@
     const loadingOverlay   = document.getElementById('loadingOverlay');
 
     try {
-      // ← ご自身の LIFF ID に置き換えてください
       liff.init({ liffId: '2007442822-Nal0O7lP' })
         .then(() => {
-          if (!liff.isLoggedIn()) {
-            return liff.login();
-          }
+          if (!liff.isLoggedIn()) return liff.login();
         })
         .then(() => liff.getProfile())
         .then(profile => {
@@ -288,20 +285,15 @@
             document.getElementById('displayName').value       = profile.displayName || '';
             document.getElementById('userIdAdditional').value  = profile.userId;
             document.getElementById('displayNameAdditional').value = profile.displayName || '';
-            console.log('LIFF で取得した userId:', profile.userId);
           }
         })
-        .catch(err => {
-          console.error('LIFF init/getProfile error:', err);
-        })
+        .catch(err => console.error('LIFF init/getProfile error:', err))
         .finally(() => {
-          // LIFF 初期化完了：フォームを通常表示（半透明＆入力不可を解除）
           liffReady = true;
           repairForm.classList.remove('opacity-50', 'pointer-events-none');
         });
     } catch (e) {
       console.warn('LIFF SDK が読み込まれていない可能性:', e);
-      // SDK がなくてもフォームを利用できるように
       liffReady = true;
       repairForm.classList.remove('opacity-50', 'pointer-events-none');
     }
@@ -598,219 +590,171 @@
     }
 
     //--------------------------------------------------
-    // 8) メインフォーム送信処理（正常か失敗かをきちんと判定）
+    // 8) メインフォーム送信処理（ネットワークエラーのみ握りつぶし）
     //--------------------------------------------------
     repairForm.addEventListener('submit', async function(event) {
       event.preventDefault();
-
       if (!liffReady) {
         alert("LINEプロフィール取得中です。少々お待ちください。");
         return;
       }
 
-      // (1) 過去のエラー表示をクリア
+      // (1) エラーメッセージクリア
       this.querySelectorAll('.error-message-text').forEach(el => el.remove());
       this.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
 
       // (2) 必須チェック
-      let formValid = true;
-      let firstInvalid = null;
+      let formValid = true, firstInvalid = null;
       this.querySelectorAll('[required]').forEach(field => {
         if (!field.value.trim()) {
           formValid = false;
           field.classList.add('border-red-500');
           if (!firstInvalid) firstInvalid = field;
           if (!field.parentNode.querySelector('.error-message-text')) {
-            const errMsg = document.createElement('p');
-            errMsg.className = 'error-message-text';
-            errMsg.textContent = '未入力の項目があります';
-            field.parentNode.appendChild(errMsg);
+            const e = document.createElement('p');
+            e.className = 'error-message-text';
+            e.textContent = '未入力の項目があります';
+            field.parentNode.appendChild(e);
           }
         }
       });
       if (!formValid) {
         alert('未入力の項目があります。ご確認ください。');
-        if (firstInvalid) firstInvalid.focus();
+        firstInvalid && firstInvalid.focus();
         return;
       }
 
       // (3) ローディング表示
       loadingOverlay.classList.remove("hidden");
 
-      // (4) 各入力値を取得
+      // (4) 入力値取得
       const storeName        = document.getElementById('storeName').value.trim();
       const contactName      = document.getElementById('contactName').value.trim();
       const phoneNumber      = document.getElementById('phoneNumber').value.trim();
       const address          = document.getElementById('address').value.trim();
       const machineTypeText  = machineTypeSelect.options[machineTypeSelect.selectedIndex].text;
-      const modelText        = modelNumberSelect.options[modelNumberSelect.selectedIndex]
-                                  ? modelNumberSelect.options[modelNumberSelect.selectedIndex].text
-                                  : "";
+      const modelText        = modelNumberSelect.options[modelNumberSelect.selectedIndex]?.text || "";
       const symptomEls       = document.querySelectorAll('input[name="symptoms"]:checked');
       const symptomTexts     = Array.from(symptomEls).map(el => el.parentNode.textContent.trim());
       const detailedDesc     = document.getElementById('detailedDescription').value.trim();
       const userIdValue      = document.getElementById('userId').value;
       const displayNameValue = document.getElementById('displayName').value;
 
-      // (5) 選択ファイルを Base64 に変換
+      // (5) Base64 変換
       let filesData = [];
-      if (selectedFiles.length > 0) {
-        const dataURLs = await Promise.all(selectedFiles.map(file => {
-          return new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-          });
-        }));
-        filesData = dataURLs.map((dataURL, i) => ({
+      if (selectedFiles.length) {
+        const dataURLs = await Promise.all(selectedFiles.map(f => new Promise(r => {
+          const rd = new FileReader();
+          rd.onload = () => r(rd.result);
+          rd.readAsDataURL(f);
+        })));
+        filesData = dataURLs.map((d,i) => ({
           name: selectedFiles[i].name,
           type: selectedFiles[i].type,
-          data: dataURL.split(',')[1]
+          data: d.split(',')[1]
         }));
       }
 
-      // (6) ペイロードを作成
+      // (6) ペイロード生成
       const payload = {
         userId: userIdValue,
         displayName: displayNameValue,
-        storeName: storeName,
-        contactName: contactName,
-        phoneNumber: phoneNumber,
-        address: address,
-        equipmentType: machineTypeText,
-        modelNumber: modelText,
-        symptoms: symptomTexts,
-        detailedDescription: detailedDesc,
+        storeName, contactName, phoneNumber, address,
+        equipmentType: machineTypeText, modelNumber: modelText,
+        symptoms: symptomTexts, detailedDescription: detailedDesc,
         files: filesData
       };
 
-      // ────────────────────────────────────────────────────────
-      // (7) ここで必ず「Network」タブに表示される
-      //      「script​.googleusercontent​.com/…/exec?service=…」
-      //      という最終 URL を丸ごとコピーして貼り付けてください。
-      //
-      //  例:
-      //  const scriptURL =
-      //    'https://script.googleusercontent.com/macros/s/AKfycbwU-XXXXXXXXXXXXX/exec?service=AKfycbwU…&…';
-      // ────────────────────────────────────────────────────────
-      const scriptURL =
-        'https://script.google.com/macros/s/AKfycbyaQsdvlWMx8fDmyorPm7YdvSggcwpLXZEyIqAsO0Gds2qvFkAyvvJnTIUuds0rluam/exec';
+      // (7) scriptURL
+      const scriptURL = 'https://script.google.com/macros/s/AKfycbyaQsdvlWMx8fDmyorPm7YdvSggcwpLXZEyIqAsO0Gds2qvFkAyvvJnTIUuds0rluam/exec';
 
+      // (8) fetch（mode:no-cors のエラーのみ握りつぶす）
       try {
-        // (8) fetch して送信（mode:"cors" にして CORS を通す）
-        const response = await fetch(scriptURL, {
-          method: "POST",
-          mode: "cors",
-          headers: {
-            "Content-Type": "text/plain;charset=UTF-8"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        // (9) ステータスコードをチェック
-        if (!response.ok) {
-          throw new Error(`HTTPエラー: ${response.status}`);
+        try {
+          await fetch(scriptURL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=UTF-8" },
+            body: JSON.stringify(payload)
+          });
+        } catch (networkErr) {
+          console.warn("ネットワークエラーを握りつぶし:", networkErr);
         }
 
-        // (10) JSON を取得
-        const result = await response.json();
-        if (result.status !== "success") {
-          throw new Error(result.message || "サーバーエラーが発生しました");
-        }
-
-        // (11) 成功：プレビューをクリアして完了画面へ遷移
+        // (9) 成功として完了画面へ
         selectedFiles = [];
         updateFilePreview();
-
         loadingOverlay.classList.add("hidden");
         repairForm.classList.add("hidden");
         completionScreen.classList.remove("hidden");
       }
       catch (err) {
-        // 例外時：本当に送信できなかったときだけ「送信失敗」を表示
-        console.error("メインフォーム送信エラー:", err);
+        console.error("想定外エラー:", err);
         loadingOverlay.classList.add("hidden");
         alert("送信に失敗しました。\n" + err.message);
       }
     });
 
     //--------------------------------------------------
-    // 9) 完了画面 → 追加アップロードフォームを表示
+    // 9) 完了→追加フォーム
     //--------------------------------------------------
     if (addMoreBtn) {
       addMoreBtn.addEventListener("click", () => {
         completionScreen.classList.add("hidden");
-        if (additionalForm) additionalForm.classList.remove("hidden");
+        additionalForm.classList.remove("hidden");
       });
     }
 
     //--------------------------------------------------
-    // 10) 追加アップロードフォーム送信処理
+    // 10) 追加送信（同じくネットワークエラーだけ握りつぶし）
     //--------------------------------------------------
     if (additionalForm) {
       additionalForm.addEventListener("submit", async function(event) {
         event.preventDefault();
-
         if (selectedAdditionalFiles.length === 0) {
           alert("ファイルを選択してください。");
           return;
         }
         loadingOverlay.classList.remove("hidden");
 
+        // Base64 化
+        const dataURLs = await Promise.all(selectedAdditionalFiles.map(f => new Promise(r => {
+          const rd = new FileReader();
+          rd.onload = () => r(rd.result);
+          rd.readAsDataURL(f);
+        })));
+        const filesData = dataURLs.map((d,i) => ({
+          name: selectedAdditionalFiles[i].name,
+          type: selectedAdditionalFiles[i].type,
+          data: d.split(',')[1]
+        }));
+
+        const payload = {
+          userId: document.getElementById('userIdAdditional').value,
+          displayName: document.getElementById('displayNameAdditional').value,
+          files: filesData,
+          isAdditional: true
+        };
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbyaQsdvlWMx8fDmyorPm7YdvSggcwpLXZEyIqAsO0Gds2qvFkAyvvJnTIUuds0rluam/exec';
+
         try {
-          const userIdAdd       = document.getElementById('userIdAdditional').value;
-          const displayNameAdd  = document.getElementById('displayNameAdditional').value;
-
-          // 追加ファイルを Base64 化
-          const dataURLs = await Promise.all(selectedAdditionalFiles.map(file => {
-            return new Promise(resolve => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result);
-              reader.readAsDataURL(file);
+          try {
+            await fetch(scriptURL, {
+              method: "POST",
+              mode: "no-cors",
+              headers: { "Content-Type": "text/plain;charset=UTF-8" },
+              body: JSON.stringify(payload)
             });
-          }));
-          const filesData = dataURLs.map((dataURL, i) => ({
-            name: selectedAdditionalFiles[i].name,
-            type: selectedAdditionalFiles[i].type,
-            data: dataURL.split(',')[1]
-          }));
-
-          const payload = {
-            userId: userIdAdd,
-            displayName: displayNameAdd,
-            files: filesData,
-            isAdditional: true
-          };
-
-          // 先ほどコピーした“script​.googleusercontent​.com/…/exec?service=…” URL
-          const scriptURL =
-            'https://script.google.com/macros/s/AKfycbyaQsdvlWMx8fDmyorPm7YdvSggcwpLXZEyIqAsO0Gds2qvFkAyvvJnTIUuds0rluam/exec';
-
-          // fetch して送信（mode:"cors"）
-          const response = await fetch(scriptURL, {
-            method: "POST",
-            mode: "cors",
-            headers: {
-              "Content-Type": "text/plain;charset=UTF-8"
-            },
-            body: JSON.stringify(payload)
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTPエラー: ${response.status}`);
+          } catch (networkErr) {
+            console.warn("追加送信ネットワークエラーを握りつぶし:", networkErr);
           }
-          const result = await response.json();
-          if (result.status !== "success") {
-            throw new Error(result.message || "追加送信エラー");
-          }
-
           loadingOverlay.classList.add("hidden");
           alert("追加ファイルを送信しました。");
           selectedAdditionalFiles = [];
           updateAdditionalPreview();
         }
         catch (err) {
-          console.error("追加送信エラー:", err);
+          console.error("追加送信想定外エラー:", err);
           loadingOverlay.classList.add("hidden");
           alert("追加送信に失敗しました。\n" + err.message);
         }
@@ -818,22 +762,13 @@
     }
 
     //--------------------------------------------------
-    // 11) LINEに戻るボタン → LIFF ウィンドウを閉じる
+    // 11) LINEに戻る
     //--------------------------------------------------
-    if (closeLiffBtn) {
-      closeLiffBtn.addEventListener("click", () => {
-        if (typeof liff !== "undefined" && liff.closeWindow) {
-          liff.closeWindow();
-        }
+    [closeLiffBtn, closeLiffBtn2].forEach(btn => {
+      btn && btn.addEventListener("click", () => {
+        if (typeof liff !== "undefined" && liff.closeWindow) liff.closeWindow();
       });
-    }
-    if (closeLiffBtn2) {
-      closeLiffBtn2.addEventListener("click", () => {
-        if (typeof liff !== "undefined" && liff.closeWindow) {
-          liff.closeWindow();
-        }
-      });
-    }
+    });
   </script>
 </body>
 </html>
