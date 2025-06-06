@@ -311,7 +311,6 @@
         });
     } catch (e) {
       console.warn('LIFF SDK が読み込まれていない可能性:', e);
-      // SDK がなくてもフォームを利用できるように
       liffReady = true;
       repairForm.classList.remove('opacity-50', 'pointer-events-none');
     }
@@ -432,13 +431,13 @@
     let selectedAdditionalFiles = [];
 
     //--------------------------------------------------
-    // 5) 機器種類選択 → 型番＆故障内容を動的に生成
+    // 5) 機器種類→型番＆故障内容を動的生成
     //--------------------------------------------------
     if (machineTypeSelect) {
       machineTypeSelect.addEventListener('change', function() {
         const selectedMachine = this.value;
 
-        // ■ 型番セレクトをクリア → 新オプションを追加
+        // ■ 型番セレクトをクリア→新オプション追加
         modelNumberSelect.innerHTML = '<option value="">機器の種類を選択してください</option>';
         if (selectedMachine && modelData[selectedMachine]) {
           modelData[selectedMachine].forEach(item => {
@@ -456,7 +455,7 @@
           modelNumberSelect.appendChild(opt);
         }
 
-        // ■ 故障内容をクリア → 新規チェックボックスを追加
+        // ■ 故障内容をクリア→新規チェックボックス追加
         troubleSymptomsDiv.innerHTML = '';
         if (selectedMachine && troubleData[selectedMachine]) {
           troubleData[selectedMachine].forEach(categoryItem => {
@@ -490,7 +489,7 @@
     }
 
     //--------------------------------------------------
-    // 6) メイン：ファイル選択 → プレビュー更新
+    // 6) メイン：ファイル選択→プレビュー更新
     //--------------------------------------------------
     if (fileUploadInput) {
       fileUploadInput.addEventListener('change', function(event) {
@@ -549,7 +548,7 @@
     }
 
     //--------------------------------------------------
-    // 7) 追加：ファイル選択 → プレビュー更新
+    // 7) 追加：ファイル選択→プレビュー更新
     //--------------------------------------------------
     if (additionalFileInput) {
       additionalFileInput.addEventListener('change', function(event) {
@@ -608,7 +607,7 @@
     }
 
     //--------------------------------------------------
-    // 8) メインフォーム送信処理（CORS 回避のため mode: 'no-cors'）
+    // 8) メインフォーム送信処理（mode: 'cors' に変更）
     //--------------------------------------------------
     repairForm.addEventListener('submit', async function(event) {
       event.preventDefault();
@@ -695,27 +694,35 @@
           files: filesData
         };
 
-        // ────────────────────────────────────────────────────────
-        // (7) ここで必ず「Network」タブに出てくる「script​.googleusercontent​.com/…/exec?service=…」
-        //      という最終 URL を丸ごとコピーして貼り付けてください。
-        //      例:
-        //      const scriptURL =
-        //        'https://script.googleusercontent.com/macros/s/AKfycbwU-XXXXXXXXXXXXX/exec?service=AKfycbwU…&…';
-        // ────────────────────────────────────────────────────────
-        const scriptURL =
-          'https://script.googleusercontent.com/macros/s/AKfycbwU-XXXXXXXXXXXXX/exec?service=AKfycbwU…&…';
+        // (7) 「ウェブアプリの URL（script.google.com/macros/s/.../exec）」を丸ごと貼り付け
+        //     例:
+        //     const scriptURL = 'https://script.google.com/macros/s/AKfycbwU-XXXXXXXXXXXXX/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbyaQsdvlWMx8fDmyorPm7YdvSggcwpLXZEyIqAsO0Gds2qvFkAyvvJnTIUuds0rluam/exec';
 
-        // (8) fetch して送信（mode: 'no-cors' にすることで CORS エラーを回避）
-        await fetch(scriptURL, {
+        console.log('fetch を叩く: ', scriptURL);
+
+        // (8) fetch を実行（mode: 'cors'）
+        const response = await fetch(scriptURL, {
           method: "POST",
-          mode: "no-cors",
+          mode: "cors",            // ← ここを 'cors' にすることで CORS を正しく通す
           headers: {
             "Content-Type": "text/plain;charset=UTF-8"
           },
           body: JSON.stringify(payload)
         });
 
-        // (9) レスポンスを待たずに完了画面へ遷移
+        console.log('HTTP ステータス：', response.status);
+        if (!response.ok) {
+          throw new Error('HTTP エラー: ' + response.status);
+        }
+
+        const result = await response.json();
+        console.log('GAS からの返り値：', result);
+        if (result.status !== 'success') {
+          throw new Error(result.message || 'サーバーエラーが発生');
+        }
+
+        // (9) 成功 → 完了画面へ
         selectedFiles = [];
         updateFilePreview();
         loadingOverlay.classList.add("hidden");
@@ -725,7 +732,6 @@
       catch (err) {
         console.error("メインフォーム送信エラー:", err);
         loadingOverlay.classList.add("hidden");
-        // mode:'no-cors' の場合、fetch が成功すればここには来ません。
         alert("送信に失敗しました。\n" + err.message);
       }
     });
@@ -741,7 +747,7 @@
     }
 
     //--------------------------------------------------
-    // 10) 追加アップロードフォーム送信処理
+    // 10) 追加アップロードフォーム送信（mode: 'cors'）
     //--------------------------------------------------
     if (additionalForm) {
       additionalForm.addEventListener("submit", async function(event) {
@@ -757,7 +763,7 @@
           const userIdAdd       = document.getElementById('userIdAdditional').value;
           const displayNameAdd  = document.getElementById('displayNameAdditional').value;
 
-          // 追加ファイルを Base64 化
+          // (10-1) 追加ファイルを Base64 化
           const dataURLs = await Promise.all(selectedAdditionalFiles.map(file => {
             return new Promise(resolve => {
               const reader = new FileReader();
@@ -778,18 +784,25 @@
             isAdditional: true
           };
 
-          // 先ほどコピーした“script​.googleusercontent​.com/…/exec?service=…” URL
-          const scriptURL =
-            'https://script.googleusercontent.com/macros/s/AKfycbwU-XXXXXXXXXXXXX/exec?service=AKfycbwU…&…';
+          // (10-2) 同じ exec URL を使う
+          const scriptURL = 'https://script.google.com/macros/s/AKfycbyaQsdvlWMx8fDmyorPm7YdvSggcwpLXZEyIqAsO0Gds2qvFkAyvvJnTIUuds0rluam/exec';
 
-          await fetch(scriptURL, {
+          const response = await fetch(scriptURL, {
             method: "POST",
-            mode: "no-cors",
+            mode: "cors",
             headers: {
               "Content-Type": "text/plain;charset=UTF-8"
             },
             body: JSON.stringify(payload)
           });
+
+          if (!response.ok) {
+            throw new Error('HTTP エラー: ' + response.status);
+          }
+          const result = await response.json();
+          if (result.status !== 'success') {
+            throw new Error(result.message || '追加送信エラー');
+          }
 
           loadingOverlay.classList.add("hidden");
           alert("追加ファイルを送信しました。");
@@ -805,7 +818,7 @@
     }
 
     //--------------------------------------------------
-    // 11) LINEに戻るボタン → LIFF ウィンドウを閉じる
+    // 11) 「LINEに戻る」ボタン → LIFF ウィンドウを閉じる
     //--------------------------------------------------
     if (closeLiffBtn) {
       closeLiffBtn.addEventListener("click", () => {
