@@ -162,22 +162,33 @@
           <!-- ■ セクション：写真・動画アップロード -->
           <div class="space-y-4">
             <h2 class="text-xl font-semibold text-gray-700 border-b border-gray-200 pb-2">写真・動画で状況を詳しく報告</h2>
-            <p class="text-sm text-gray-500">※画像は最大5枚、動画は最大2本まで添付可能</p>
-            <div>
+            <p class="text-sm text-gray-500">写真や動画をお送りいただくと、よりスムーズで的確な対応が可能になります。</p>
+            
+            <!-- ──────────────────────────────────────────────────── -->
+            <!-- 画像部分（サンプルを忠実に再現）                            -->
+            <!-- ──────────────────────────────────────────────────── -->
+            <div class="mt-2 p-6 bg-indigo-50 border-2 border-dashed border-gray-300 rounded-lg text-center">
               <label for="fileUpload"
-                     class="inline-flex items-center px-6 py-2 bg-gray-200 text-gray-700 font-medium rounded-md
-                            hover:bg-gray-300 transition-colors duration-200 cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-600" fill="none" viewBox="0 0 24 24"
-                     stroke="currentColor" stroke-width="2">
+                     class="inline-flex items-center px-6 py-3 bg-white border border-gray-300 rounded-md
+                            hover:bg-gray-100 transition-colors duration-200 cursor-pointer text-indigo-700 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-600" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round"
                         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M4 8V5a3 3 0 013-3h10a3 3 0 013 3v3M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
-                カメラで撮影 / ファイルを選択
+                <span class="text-base">📷 カメラで撮影 / 📁 ファイルを選択</span>
                 <input type="file" id="fileUpload" name="fileUpload" accept="image/*,video/*" multiple
                        class="sr-only" />
               </label>
             </div>
-            <div id="filePreview" class="mt-3 space-y-2"></div>
+            <div class="text-left text-sm text-gray-600 space-y-1 mt-2">
+              <p>・異音や動作不良の場合は、動画での送信を推奨します。</p>
+              <p>・動画を送信される場合は、30秒以内でお願いいたします。</p>
+              <p>・画像は5枚、動画は2本まで添付できます。</p>
+            </div>
+
+            <!-- プレビュー用要素 -->
+            <div id="filePreview" class="mt-4 space-y-2"></div>
           </div>
 
           <!-- ■ Hidden：LIFF ユーザー情報 -->
